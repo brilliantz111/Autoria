@@ -16,21 +16,23 @@
 4. 点 **Create repository**（**不要**勾选任何初始化选项，保持空仓库即可）
 
 ### 第 3 步：把本文件夹里的文件推上去
-推荐用 **GitHub Desktop**（图形界面，无需懂命令行）：
+本仓库**已经初始化好 git 并完成首次提交**，你只需要推送到 GitHub。
 
-1. 下载安装 https://desktop.github.com/ 并用 GitHub 账号登录
-2. 菜单 `File → Add local repository`，选择本文件夹（`news-repo`）
-3. 弹窗里选你刚建好的 `autoria-news` 仓库，点 **Add**
-4. 首次会提示选择分支，选 `main`
-5. 点 **Publish repository**（发布）→ 完成推送
+**方式 A：GitHub Desktop（推荐，图形界面）**
+1. 双击运行已下载好的 `GitHubDesktopSetup-x64.exe` 完成安装，打开后用 GitHub 账号登录
+2. 菜单 `File → Add local repository…`
+3. 选择本文件夹（`news-repo`）→ 点 **Add**
+4. 页面出现"Publish repository"（发布仓库）→ 仓库名填 `autoria-news`，勾选公开 → 点 **Publish repository**
 
-> 如果熟悉命令行，也可以：
-> ```
-> git init && git add . && git commit -m "init"
-> git branch -M main
-> git remote add origin https://github.com/<你的用户名>/autoria-news.git
-> git push -u origin main
-> ```
+**方式 B：命令行（本机已装 Git）**
+```
+cd "E:\朱\个人\Autoria的工作台\news-repo"
+git remote add origin https://github.com/<你的用户名>/autoria-news.git
+git push -u origin main
+```
+> 首次 push 会弹出 GitHub 登录窗口，用浏览器授权即可（命令行会自动打开）。
+
+两种方式任选其一，完成即推送成功。
 
 ### 第 4 步：让定时任务跑起来
 推上去后 GitHub 会自动运行一次抓取（几分钟内完成）。可以打开仓库页面的 **Actions** 标签查看进度，也可以点 **Run workflow** 手动再跑一次。等 `news.js` 出现在仓库文件列表里，就说明成功了。
