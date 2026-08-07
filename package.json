@@ -1,0 +1,16 @@
+{
+  "name": "autoria-news",
+  "version": "1.0.0",
+  "private": true,
+  "description": "聚合科技/金融/游戏三行业资讯，产出 news.js 供 Autoria 工作台读取",
+  "main": "aggregate.js",
+  "scripts": {
+    "build": "node aggregate.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "rss-parser": "^3.13.0"
+  }
+}

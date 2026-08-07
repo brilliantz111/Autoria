@@ -1,0 +1,43 @@
+name: Generate News
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'   # 每 2 小时整点抓取一次
+  push:
+    branches: [main]
+  workflow_dispatch: {}     # 支持仓库页面手动触发
+
+permissions:
+  contents: write            # 允许把生成的 news.js 提交回仓库
+
+concurrency:
+  group: news-generate
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 抓取并生成 news.js
+        run: node aggregate.js
+
+      - name: 有变化则提交回仓库
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add news.js
+          if git diff --cached --quiet; then
+            echo "news.js 无变化，跳过提交"
+          else
+            git commit -m "chore: 更新资讯数据 $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi
