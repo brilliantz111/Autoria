@@ -1,0 +1,2714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Autoria 的工作台</title>
+<style>
+/* ============================================================
+   工作台 v36 — 大胆渐变 · 不对称布局 · 细腻视差 · 悬停动效
+   参考：Apple 排版（大标题/留白） + Material Design（涟漪/elevation/FAB）
+   ============================================================ */
+:root{
+  --bg:#f5f4ff; --bg2:#fff;
+  --ink:#18122f; --muted:#6c6688;
+  --line:rgba(24,18,47,.08);
+  --card:rgba(255,255,255,.66); --card-solid:#fff;
+  --r:24px; --r-sm:16px;
+  --g1:linear-gradient(135deg,#818cf8 0%,#a78bfa 100%);
+  --g2:linear-gradient(135deg,#60a5fa 0%,#93c5fd 100%);
+  --g3:linear-gradient(135deg,#a5b4fc 0%,#c4b5fd 100%);
+  --g4:linear-gradient(135deg,#7dd3fc 0%,#a5b4fc 100%);
+  --g5:linear-gradient(135deg,#c4b5fd 0%,#818cf8 100%);
+  --accent:#6366f1; --accent-soft:rgba(99,102,241,.12);
+  --shadow:0 10px 30px rgba(45,22,90,.10);
+  --shadow-lg:0 28px 70px rgba(96,32,150,.26);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0e0b1e; --bg2:#16122c; --ink:#f3f0ff; --muted:#a59dc4;
+    --line:rgba(255,255,255,.10); --card:rgba(38,30,66,.55); --card-solid:#1c1733;
+    --accent:#a5b4fc; --accent-soft:rgba(165,180,252,.14);
+    --shadow:0 10px 30px rgba(0,0,0,.45); --shadow-lg:0 28px 70px rgba(0,0,0,.6);
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;line-height:1.5}
+/* 桌面端减少 sticky 毛玻璃和大面积滤镜在滚动时的重绘；移动端保留原有轻量效果 */
+@media(min-width:761px){
+  /* 视觉/流畅平衡：恢复静态柔光光斑（去掉持续动画与滚动位移），毛玻璃保持 v4.3 观感 */
+  .blobs{filter:blur(46px);opacity:.42;will-change:auto}
+  .blob{animation:none;will-change:auto}
+  .hero h1{will-change:auto}
+}
+@media(min-width:761px) and (prefers-color-scheme:dark){
+  .topnav{background:rgba(14,11,30,.94)}
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit;color:var(--ink)}
+::selection{background:rgba(129,140,248,.32)}
+
+/* ---------- 背景视差光斑 ---------- */
+.blobs{position:fixed;inset:-20vh -20vw;z-index:0;pointer-events:none;filter:blur(60px);opacity:.5;will-change:transform}
+.blob{position:absolute;border-radius:50%;will-change:transform}
+.b1{width:46vw;height:46vw;background:radial-gradient(circle at 30% 30%,#818cf8,#a5b4fc);top:-8vw;left:-6vw;animation:float1 18s ease-in-out infinite}
+.b2{width:40vw;height:40vw;background:radial-gradient(circle at 30% 30%,#6366f1,#a5b4fc);top:30vh;right:-10vw;animation:float2 22s ease-in-out infinite}
+.b3{width:34vw;height:34vw;background:radial-gradient(circle at 30% 30%,#93c5fd,#a78bfa);bottom:-6vw;left:24vw;animation:float3 20s ease-in-out infinite}
+@keyframes float1{50%{transform:translate(4vw,5vh) scale(1.1)}}
+@keyframes float2{50%{transform:translate(-5vw,3vh) scale(1.08)}}
+@keyframes float3{50%{transform:translate(3vw,-4vh) scale(1.12)}}
+
+/* ---------- 顶栏（Apple 极简 + 毛玻璃） ---------- */
+.topnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;padding:14px clamp(16px,4vw,40px);background:rgba(255,255,255,.55);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line);transition:box-shadow .3s,background .3s}
+@media (prefers-color-scheme: dark){.topnav{background:rgba(14,11,30,.6)}}
+.topnav.scrolled{box-shadow:0 6px 24px rgba(40,20,80,.12)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:.3px;white-space:nowrap}
+.logo .mark{width:34px;height:34px;border-radius:11px;background:var(--g1);display:grid;place-items:center;color:#fff;font-size:18px;box-shadow:0 6px 16px rgba(99,102,241,.45)}
+.logo b{background:var(--g1);-webkit-background-clip:text;background-clip:text;color:transparent}
+.navpills{display:flex;gap:6px;margin-left:10px;flex-wrap:wrap}
+.pill{padding:8px 15px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--muted);transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+.pill:hover{color:var(--ink);background:var(--line);transform:translateY(-1px)}
+.pill.active{color:#fff;background:var(--g1);box-shadow:0 8px 20px rgba(99,102,241,.4)}
+.nav-right{margin-left:auto;display:flex;align-items:center;min-width:0}
+.clock-box{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.clock{min-width:138px;padding-left:12px;border-left:1px solid var(--line);font-size:19px;font-weight:750;font-variant-numeric:tabular-nums;letter-spacing:.2px;line-height:1.08;text-align:left}
+.clock small{display:block;margin-top:4px;font-size:10px;font-weight:550;line-height:1.15;color:var(--muted);letter-spacing:0}
+
+/* 同步：只显示按钮；悬停/点击浮出上次同步时间 */
+.sync-wrap{position:relative;display:flex;align-items:center;flex:none}
+.sync-ico{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:18px;background:var(--card-solid);box-shadow:var(--shadow);transition:transform .3s,box-shadow .3s}
+.sync-ico:hover{transform:translateY(-2px) rotate(8deg);box-shadow:var(--shadow-lg)}
+.sync-ico.spin{animation:spin .8s ease}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sync-tip{position:absolute;top:calc(100% + 10px);right:0;z-index:60;white-space:nowrap;font-size:11.5px;font-weight:600;color:#fff;background:var(--ink);padding:7px 12px;border-radius:10px;box-shadow:var(--shadow-lg);opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .25s,transform .25s}
+.sync-wrap:hover .sync-tip,.sync-tip.show{opacity:1;transform:none}
+
+/* ---------- 容器 ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,40px) 120px;position:relative;z-index:1}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--g2);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- HERO（不对称 + 视差） ---------- */
+.hero{position:relative;z-index:1;padding:clamp(36px,6vw,72px) clamp(16px,4vw,40px) 26px;max-width:1180px;margin:0 auto;transition:opacity .3s}
+.hero.is-hidden{display:none}
+body.subview .section-head{margin-top:24px}
+@media(max-width:760px){body.subview .section-head{margin-top:18px}}
+.hero-grid{display:grid;grid-template-columns:1.35fr .9fr;gap:26px;align-items:center}
+@media(max-width:860px){.hero-grid{grid-template-columns:1fr}}
+.hero h1{font-size:clamp(38px,6.5vw,72px);font-weight:800;line-height:1.03;letter-spacing:-1.5px;will-change:transform}
+.hero h1 .grad{background:var(--g1);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.sub{margin-top:18px;font-size:clamp(15px,2vw,18px);color:var(--muted);max-width:36ch;line-height:1.6}
+.hero-cta{margin-top:26px;display:flex;gap:12px;flex-wrap:wrap}
+.btn{padding:13px 24px;border-radius:999px;font-weight:700;font-size:14.5px;position:relative;overflow:hidden;transition:transform .25s,box-shadow .25s}
+.btn-pri{background:var(--g1);color:#fff;box-shadow:0 12px 30px rgba(99,102,241,.45)}
+.btn-pri:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(99,102,241,.55)}
+.btn-ghost{background:var(--card-solid);color:var(--ink);box-shadow:var(--shadow)}
+.btn-ghost:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.float-cards{position:relative;height:330px}
+.fcard{position:absolute;background:var(--card);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);will-change:transform;transition:transform .4s,box-shadow .4s}
+.fcard:hover{transform:translateY(-6px) scale(1.03);box-shadow:var(--shadow-lg)}
+.fcard .lbl{font-size:12px;color:var(--muted);font-weight:600}
+.fcard .val{font-size:29px;font-weight:800;margin-top:4px;letter-spacing:-.5px}
+.fcard.fc1{top:0;right:0;width:225px;background:var(--g1);color:#fff;border:none}
+.fcard.fc1 .lbl{color:rgba(255,255,255,.82)}
+.fcard.fc2{top:118px;right:125px;width:195px}
+.fcard.fc3{top:208px;right:8px;width:205px;background:var(--g2);color:#fff;border:none}
+.fcard.fc3 .lbl{color:rgba(255,255,255,.85)}
+@media(max-width:860px){.float-cards{height:auto;display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px}.fcard{position:static!important;width:auto!important}}
+
+/* ---------- 视图切换 ---------- */
+.view{display:none}
+.view.active{display:block;animation:viewIn .5s cubic-bezier(.2,.7,.2,1)}
+@keyframes viewIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@media(min-width:761px){
+  /* 页面切换动画只在进入视图时运行，不让滚动中的整页保持动画合成层 */
+  .view.active{animation-duration:.28s}
+}
+
+/* ---------- Section head（Apple 大标题） ---------- */
+.section-head{margin:34px 0 16px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.section-head h2{font-size:clamp(24px,4vw,33px);font-weight:800;letter-spacing:-.5px}
+.section-head .hint{color:var(--muted);font-size:13px}
+.grad{background:var(--g1);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- 12 列不对称栅格 + 卡片 ---------- */
+.grid{display:grid;gap:18px}
+.grid-home{grid-template-columns:repeat(12,1fr)}
+.col-span-3{grid-column:span 3}.col-span-4{grid-column:span 4}.col-span-5{grid-column:span 5}
+.col-span-6{grid-column:span 6}.col-span-7{grid-column:span 7}.col-span-8{grid-column:span 8}.col-span-12{grid-column:span 12}
+@media(max-width:860px){.grid-home>*{grid-column:1/-1!important}}
+.card{background:var(--card-solid);border-radius:var(--r);padding:22px;box-shadow:var(--shadow);border:1px solid var(--line);position:relative;overflow:hidden;transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s}
+.card::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:var(--g1)}
+.card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg)}
+.card h2{font-size:16px;font-weight:750;display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.card.reveal,.fcard.reveal{opacity:0;transform:translateY(26px)}
+.card.reveal.in,.fcard.reveal.in{opacity:1;transform:none;transition:opacity .7s,transform .7s}
+.badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);margin-left:auto}
+
+/* ---------- 通用按钮 ---------- */
+.btn-accent{border:none;background:var(--g1);color:#fff;font-size:13.5px;padding:10px 18px;border-radius:12px;font-weight:700;transition:all .25s;box-shadow:0 8px 20px rgba(99,102,241,.35)}
+.btn-accent:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(99,102,241,.45)}
+.mini-btn{border:1px solid var(--line);background:var(--card-solid);color:var(--ink);font-size:12.5px;padding:7px 13px;border-radius:10px;transition:all .2s}
+.mini-btn:hover{background:var(--accent-soft);color:var(--accent);transform:translateY(-1px)}
+
+/* ---------- 今日目标 ---------- */
+.goal-input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:14px;padding:12px 14px;font-size:14px;outline:none;transition:box-shadow .2s}
+.goal-input:focus{box-shadow:0 0 0 3px rgba(99,102,241,.22)}
+
+/* ---------- 待办 ---------- */
+.todo-add{display:flex;gap:8px;margin-bottom:12px}
+.todo-add input{flex:1;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 14px;font-size:14px;outline:none;transition:box-shadow .2s}
+.todo-add input:focus{box-shadow:0 0 0 3px rgba(99,102,241,.22)}
+.todo-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.todo-item{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:13px;background:var(--bg);transition:transform .2s,background .2s}
+.todo-item:hover{transform:translateX(4px)}
+.todo-check{width:21px;height:21px;border-radius:7px;border:2px solid var(--line);flex:none;color:#fff;font-size:13px;display:grid;place-items:center;transition:all .2s}
+.todo-check:hover{border-color:var(--accent)}
+.todo-check.done{background:var(--g4);border-color:transparent}
+.todo-text{flex:1;font-size:14px}
+.todo-item.done .todo-text{text-decoration:line-through;color:var(--muted)}
+.todo-del{border:none;background:none;color:var(--muted);font-size:14px;width:28px;height:28px;border-radius:8px;transition:all .2s;flex:none}
+.todo-del:hover{background:rgba(239,68,68,.12);color:#ef4444}
+.todo-empty{text-align:center;color:var(--muted);padding:22px;font-size:13px;list-style:none}
+.todo-clear{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:6px 0;transition:color .2s}
+.todo-clear:hover{color:var(--accent)}
+
+/* ---------- 便签 ---------- */
+.note-area{width:100%;height:150px;border:1px solid var(--line);background:var(--bg);border-radius:14px;padding:14px;font-size:14px;outline:none;resize:none;transition:box-shadow .2s;line-height:1.6}
+.note-area:focus{box-shadow:0 0 0 3px rgba(99,102,241,.22)}
+.note-status{font-size:11px;color:var(--muted);margin-top:6px}
+
+/* ---------- 番茄钟 ---------- */
+.pomo{display:flex;flex-direction:column;align-items:center;gap:13px}
+.pomo-time{font-size:52px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-1px;background:var(--g1);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pomo-bar{width:100%;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.pomo-bar i{display:block;height:100%;width:0;background:var(--g3);border-radius:99px;transition:width 1s linear}
+.pomo-btns{display:flex;gap:10px}
+.pomo-btns button{padding:9px 20px;border-radius:999px;font-weight:700;font-size:13.5px;position:relative;overflow:hidden;transition:transform .2s}
+.pomo-btns button:hover{transform:translateY(-2px)}
+.pomo-btns .primary{background:var(--g1);color:#fff}
+.pomo-btns button:not(.primary){background:var(--bg);box-shadow:var(--shadow)}
+
+/* ---------- 进度 ---------- */
+.progress-num{font-size:33px;font-weight:800}
+.progress-num span{font-size:14px;color:var(--muted);font-weight:600}
+.progress-bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:12px 0 8px}
+.progress-bar i{display:block;height:100%;width:0;background:var(--g2);border-radius:99px;transition:width .6s}
+.progress-tip{font-size:12.5px;color:var(--muted)}
+
+/* ---------- 快捷入口 ---------- */
+.link-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.link-item{position:relative}
+.link-item a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:13px 8px;border-radius:14px;background:var(--bg);text-decoration:none;color:var(--ink);font-size:11.5px;font-weight:600;transition:transform .25s,box-shadow .25s}
+.link-item a:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);background:var(--card-solid)}
+.link-icon{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:#fff;font-size:15px;font-weight:700}
+.link-del{position:absolute;top:3px;right:3px;border:none;background:none;color:var(--muted);font-size:11px;width:20px;height:20px;border-radius:6px;opacity:0;transition:all .2s}
+.link-item:hover .link-del{opacity:1}
+.link-del:hover{background:rgba(239,68,68,.14);color:#ef4444}
+.link-toggle{background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;padding:8px 0;transition:opacity .2s}
+.link-toggle:hover{opacity:.75}
+.link-add-form{display:none;margin-top:8px;gap:7px;flex-wrap:wrap}
+.link-add-form.show{display:flex}
+.link-add-form input{flex:1;min-width:90px;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:8px 10px;font-size:13px;outline:none}
+
+/* ---------- 背单词 ---------- */
+.word-stats{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:14px}
+.ws{font-size:12.5px;color:var(--muted)}
+.ws b{display:block;font-size:23px;color:var(--ink);font-weight:800}
+.word-target{font-size:12.5px;color:var(--muted);margin:8px 0 6px}
+.word-target input{width:62px;border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:5px 8px;font-size:14px;text-align:center;outline:none}
+.word-card{background:var(--g1);border-radius:20px;padding:30px 26px;min-height:320px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;color:#fff;box-shadow:var(--shadow-lg);position:relative;overflow:hidden}
+.word-card::after{content:"";position:absolute;right:-30px;top:-30px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.12)}
+.word-big{font-size:40px;font-weight:800;letter-spacing:-1px;display:flex;align-items:center;gap:10px}
+.word-speak{background:rgba(255,255,255,.18);border:none;font-size:19px;cursor:pointer;width:38px;height:38px;border-radius:50%;transition:all .2s;color:#fff}
+.word-speak:hover{background:rgba(255,255,255,.32);transform:scale(1.08)}
+.word-phonetic{opacity:.85;margin-top:8px;font-size:15px}
+.word-meaning{font-size:19px;font-weight:700;margin-top:14px;opacity:0;transform:translateY(6px);transition:all .35s}
+.word-meaning.show{opacity:1;transform:none}
+.word-example{opacity:.88;margin-top:10px;font-size:13.5px;line-height:1.6;font-style:italic}
+.word-aids{margin-top:16px;text-align:left;width:100%;position:relative;z-index:1}
+.wa-block{background:rgba(255,255,255,.14);border-radius:12px;padding:10px 13px;margin-top:8px;font-size:12.5px;backdrop-filter:blur(6px)}
+.wa-label{font-size:11px;font-weight:700;opacity:.85;display:block;margin-bottom:4px}
+.wa-pill{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.2);margin:2px 3px 0 0}
+.word-btns{display:flex;gap:9px;margin-top:18px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1}
+.word-btns button{border:none;padding:10px 20px;border-radius:999px;font-weight:700;font-size:13.5px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.word-btns .reveal{background:#fff;color:#6366f1}
+.word-btns .q-easy{background:var(--g4);color:#fff}
+.word-btns .q-vague{background:var(--g3);color:#fff}
+.word-btns .q-hard{background:rgba(255,255,255,.2);color:#fff}
+.word-btns button:hover{transform:translateY(-2px)}
+.word-done{text-align:center;padding:36px}
+.word-done .big{font-size:52px}
+.word-done p{margin-top:12px;color:var(--muted)}
+
+/* ---------- 练口语 ---------- */
+.speak-card{max-width:820px;margin:0 auto}
+.speak-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.speak-head h2{margin-bottom:0}
+.speak-box{min-height:300px;max-height:52vh;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:16px;background:var(--bg);border:1px solid var(--line);border-radius:16px}
+.speak-msg{display:flex;flex-direction:column;max-width:82%}
+.speak-msg.bot{align-self:flex-start}
+.speak-msg.me{align-self:flex-end}
+.speak-bubble{padding:12px 15px;border-radius:17px;font-size:14px;line-height:1.55;animation:pop .3s ease;white-space:pre-wrap}
+.speak-msg.bot .speak-bubble{background:var(--card-solid);border:1px solid var(--line);border-bottom-left-radius:6px}
+.speak-msg.me .speak-bubble{background:var(--g1);color:#fff;border-bottom-right-radius:6px}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.speak-meta{font-size:11px;color:var(--muted);margin-top:5px}
+.speak-score{display:inline-block;font-weight:800;padding:2px 10px;border-radius:999px;font-size:11.5px}
+.speak-score.good{background:rgba(16,185,129,.16);color:#059669}
+.speak-score.mid{background:rgba(245,158,11,.16);color:#d97706}
+.speak-score.low{background:rgba(239,68,68,.14);color:#dc2626}
+.speak-vocab{margin-top:12px}
+.sv-title{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px}
+.sv-pills{display:flex;flex-wrap:wrap;gap:6px}
+.sv-pill{font-size:12px;padding:5px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent);cursor:pointer;border:none;font-family:inherit;transition:all .2s}
+.sv-pill:hover{background:var(--g1);color:#fff;transform:translateY(-1px)}
+.speak-ctrl{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+.speak-lang{display:flex;gap:5px}
+.chipf{font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:999px;background:var(--bg);color:var(--muted);border:1px solid var(--line);cursor:pointer;transition:all .2s;font-family:inherit}
+.chipf.on,.chipf.active{background:var(--g2);color:#fff;border-color:transparent}
+.mic-btn{border:none;background:var(--g1);color:#fff;font-size:14.5px;font-weight:700;padding:12px 24px;border-radius:999px;cursor:pointer;box-shadow:0 8px 20px rgba(99,102,241,.4);transition:transform .2s,box-shadow .2s}
+.mic-btn:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(99,102,241,.5)}
+.mic-btn.on{animation:micpulse 1.1s ease-in-out infinite;background:var(--g3);box-shadow:0 8px 22px rgba(239,68,68,.45)}
+@keyframes micpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.speak-status{font-size:12.5px;color:var(--muted)}
+.speak-tip{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.65}
+
+/* ---------- 健身 ---------- */
+.fit-check-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.fit-streak{font-size:13px;color:var(--muted)}
+.fit-streak b{font-size:24px;color:var(--ink);font-weight:800}
+.fit-cal{margin-top:14px}
+.fit-cal-head{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px;font-weight:700;font-size:14px}
+.fit-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wd{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:700}
+.fit-cell{aspect-ratio:1;display:grid;place-items:center;font-size:12.5px;border-radius:9px;background:var(--bg);transition:all .2s}
+.fit-cell.on{background:var(--g4);color:#fff;font-weight:700}
+.fit-cell.today{box-shadow:0 0 0 2px var(--accent)}
+.fit-cell.muted{background:transparent}
+.fit-cal-foot{text-align:center;font-size:12px;color:var(--muted);margin-top:10px}
+.fit-monday{display:none;font-size:13px;color:var(--accent);margin-bottom:10px;background:var(--accent-soft);padding:9px 12px;border-radius:10px}
+.fit-monday.show{display:block}
+.fit-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:9px;margin:10px 0 12px}
+.fit-form label{font-size:11.5px;color:var(--muted);display:block;margin-bottom:4px}
+.fit-form input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:8px 10px;font-size:14px;outline:none}
+.fit-form input:focus{box-shadow:0 0 0 3px rgba(99,102,241,.2)}
+.fit-history{width:100%;border-collapse:collapse;font-size:12.5px}
+.fit-history th{color:var(--muted);font-weight:600;padding:7px 6px;text-align:left;border-bottom:1px solid var(--line)}
+.fit-history td{padding:7px 6px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.fit-history tr:last-child td{border-bottom:none}
+.delta-up{color:#ef4444;font-weight:700;font-size:11px}
+.delta-down{color:#10b981;font-weight:700;font-size:11px}
+.fit-empty{text-align:center;color:var(--muted);padding:20px;font-size:13px}
+.day-pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.day-pill{padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700;background:var(--bg);color:var(--muted);border:1px solid var(--line);transition:all .25s}
+.day-pill:hover{transform:translateY(-2px)}
+.day-pill.active{background:var(--g1);color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(99,102,241,.35)}
+.day-pill.today:not(.active){border-color:var(--accent);color:var(--accent)}
+.plan-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.plan-badge{font-size:11.5px;font-weight:800;padding:4px 12px;border-radius:999px;color:#fff}
+.plan-badge.strength{background:var(--g1)}
+.plan-badge.speed{background:var(--g3)}
+.plan-badge.recover{background:var(--g4)}
+.plan-badge.rest{background:var(--g5)}
+.plan-title{font-size:17px;font-weight:800}
+.plan-goal{font-size:13.5px;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.plan-tip{font-size:12.5px;background:var(--accent-soft);color:var(--accent);padding:9px 12px;border-radius:10px;margin-bottom:12px}
+.ex-list{list-style:none;display:flex;flex-direction:column;gap:9px}
+.ex-row{display:flex;gap:12px;padding:11px 13px;border-radius:13px;background:var(--bg);transition:transform .2s}
+.ex-row:hover{transform:translateX(4px)}
+.ex-num{width:26px;height:26px;border-radius:9px;background:var(--g2);color:#fff;font-size:12.5px;font-weight:800;display:grid;place-items:center;flex:none}
+.ex-body{flex:1;min-width:0}
+.ex-name{font-size:13.5px;font-weight:700}
+.ex-detail{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+
+/* ---------- 资讯 ---------- */
+.news-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.news-head h2{margin-bottom:0}
+.news-refresh{height:38px;background:var(--card-solid);border:1px solid var(--line);color:var(--accent);font-size:12.5px;font-weight:700;padding:0 15px;border-radius:12px;cursor:pointer;box-shadow:0 6px 18px rgba(99,102,241,.08);transition:transform .2s,background .2s,box-shadow .2s}
+.news-refresh:hover{transform:translateY(-2px);background:var(--accent-soft);box-shadow:0 10px 22px rgba(99,102,241,.14)}
+.news-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;padding:5px;background:var(--bg);border:1px solid var(--line);border-radius:15px;width:max-content;max-width:100%}
+.ntab{font-size:13px;font-weight:700;padding:8px 15px;border-radius:11px;background:transparent;color:var(--muted);border:0;cursor:pointer;transition:transform .2s,background .2s,color .2s,box-shadow .2s;font-family:inherit}
+.ntab:hover{transform:translateY(-1px);color:var(--accent)}
+.ntab.active{background:var(--card-solid);color:var(--accent);box-shadow:0 5px 16px rgba(99,102,241,.14)}
+.news-list{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.news-item{min-width:0;background:linear-gradient(145deg,var(--card-solid),var(--bg));border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:transform .25s,box-shadow .25s,border-color .25s;cursor:pointer;box-shadow:0 8px 24px rgba(99,102,241,.06)}
+.news-item:hover{transform:translateY(-4px);box-shadow:0 18px 38px rgba(99,102,241,.14);border-color:rgba(99,102,241,.24)}
+.news-item>a{display:grid;grid-template-columns:minmax(0,1fr) 116px;gap:16px;align-items:stretch;min-height:142px;padding:16px;color:inherit;text-decoration:none}
+.news-text{display:flex;flex-direction:column;min-width:0}
+.news-text .t{font-size:15px;font-weight:800;line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.news-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:auto;padding-top:12px}
+.news-source,.news-date,.news-hot{display:inline-flex;align-items:center;min-height:24px;padding:3px 8px;border-radius:8px;font-size:10.5px;font-weight:700;line-height:1.2}
+.news-source{background:var(--accent-soft);color:var(--accent)}
+.news-date{background:rgba(96,165,250,.10);color:var(--muted)}
+.news-hot{margin-left:auto;background:linear-gradient(135deg,rgba(129,140,248,.15),rgba(167,139,250,.16));color:#6366f1}
+.news-thumb{width:116px;height:110px;align-self:center;border-radius:14px;object-fit:cover;flex:none;background:var(--g2);box-shadow:0 8px 22px rgba(99,102,241,.13)}
+.news-state{text-align:center;color:var(--muted);font-size:12.5px;padding:20px}
+@media(max-width:980px){.news-list{grid-template-columns:1fr}}
+@media(max-width:560px){
+  .news-tabs{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+  .ntab{padding:8px 5px;font-size:11.5px;white-space:nowrap}
+  .news-item>a{grid-template-columns:1fr;padding:0;gap:0}
+  .news-thumb{grid-row:1;width:100%;height:150px;border-radius:0;box-shadow:none}
+  .news-text{grid-row:2;padding:14px 15px 15px}
+  .news-text .t{font-size:14px;-webkit-line-clamp:2}
+  .news-meta{padding-top:10px}
+}
+
+/* ---------- 天气 ---------- */
+.weather-wrap{position:relative;display:flex;flex:none}
+.weather-chip{height:40px;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card-solid);border-radius:14px;padding:4px 12px;box-shadow:var(--shadow);transition:transform .25s,box-shadow .25s;color:var(--ink);text-align:left}
+.weather-chip:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.w-emoji{font-size:21px;line-height:1;flex:none}
+.w-main{display:flex;flex-direction:column;justify-content:center;line-height:1.12}
+.w-main b{font-size:14px;font-variant-numeric:tabular-nums}
+.w-main span{font-size:10px;color:var(--muted);max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.w-sub{font-size:10px;color:var(--muted);border-left:1px solid var(--line);padding-left:8px;white-space:nowrap}
+@media(max-width:1120px){
+  .topnav{gap:10px;padding-left:20px;padding-right:20px}
+  .navpills{gap:3px;margin-left:2px}
+  .pill{padding-left:11px;padding-right:11px}
+  .w-sub{display:none}
+  .clock{min-width:126px;font-size:18px}
+}
+@media(max-width:940px) and (min-width:761px){
+  .logo span:last-child{display:none}
+  .clock-box{gap:8px}
+  .clock{min-width:112px;padding-left:9px;font-size:17px}
+  .clock small{max-width:112px;overflow:hidden;text-overflow:ellipsis}
+}
+.weather-pop{position:absolute;top:calc(100% + 8px);right:0;z-index:70;width:250px;background:var(--card-solid);border:1px solid var(--line);border-radius:15px;padding:12px;box-shadow:var(--shadow-lg);animation:pop .16s ease}
+.weather-pop[hidden]{display:none}
+.wh-head{font-size:12px;font-weight:700;margin-bottom:9px}
+.wh-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px 3px}
+.wh-row{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;border-radius:8px}
+.wh-row:first-child{background:var(--accent-soft)}
+.wh-h{font-size:9.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.wh-e{font-size:16px;line-height:1.1}
+.wh-t{font-size:10.5px;font-variant-numeric:tabular-nums}
+.wh-foot{font-size:9.5px;color:var(--muted);margin-top:8px;text-align:right}
+
+/* ---------- 生日横幅 ---------- */
+.birthday-banner{display:none;align-items:center;gap:10px;margin:18px auto 0;max-width:1180px;padding:15px 22px;border-radius:var(--r);color:#fff;font-weight:700;background:linear-gradient(120deg,#93c5fd,#a78bfa,#6366f1);box-shadow:var(--shadow-lg);font-size:15px;position:relative;z-index:1}
+.birthday-banner.show{display:flex}
+.birthday-banner .float{display:inline-block;animation:floaty 2.4s ease-in-out infinite}
+.birthday-banner .float:nth-child(2){animation-delay:.4s}
+.birthday-banner .float:nth-child(3){animation-delay:.8s}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+/* ---------- 纪念日横幅 ---------- */
+.anni-banner{display:none;position:relative;z-index:1;margin:18px auto 0;max-width:1180px;border-radius:24px;overflow:hidden;background:linear-gradient(135deg,#fdf2f8 0%,#fce7f3 25%,#f5d0fe 50%,#e9d5ff 75%,#ddd6fe 100%);box-shadow:0 12px 40px rgba(219,39,119,.16),0 4px 16px rgba(168,85,247,.10);animation:anniIn .7s cubic-bezier(.2,.7,.2,1)}
+.anni-banner.show{display:block}
+@keyframes anniIn{from{opacity:0;transform:translateY(-20px) scale(.96)}to{opacity:1;transform:none}}
+.anni-bg{position:absolute;inset:0;background:radial-gradient(circle at 15% 25%,rgba(251,207,232,.55) 0%,transparent 45%),radial-gradient(circle at 85% 75%,rgba(196,181,253,.45) 0%,transparent 45%);pointer-events:none}
+.anni-content{position:relative;padding:28px 28px 24px;text-align:center}
+.anni-hearts{font-size:17px;letter-spacing:5px;margin-bottom:9px;animation:heartFloat 3s ease-in-out infinite}
+@keyframes heartFloat{0%,100%{transform:translateY(0) scale(1)}25%{transform:translateY(-4px) scale(1.07)}50%{transform:translateY(-1px) scale(1)}75%{transform:translateY(-5px) scale(1.04)}}
+.anni-title{font-size:26px;font-weight:800;letter-spacing:2px;background:linear-gradient(135deg,#818cf8,#a78bfa,#6366f1);-webkit-background-clip:text;background-clip:text;color:transparent}
+.anni-years{display:inline-block;margin:8px auto 10px;padding:4px 18px;border-radius:999px;font-size:13px;font-weight:700;background:rgba(255,255,255,.62);color:#be185d;border:1px solid rgba(219,39,119,.18);backdrop-filter:blur(8px)}
+.anni-msg{font-size:14px;line-height:1.7;color:#831843;max-width:400px;margin:0 auto 14px}
+.anni-close{display:inline-block;padding:8px 26px;border-radius:999px;font-size:12.5px;font-weight:700;background:linear-gradient(135deg,#a78bfa,#818cf8);color:#fff;border:none;cursor:pointer;transition:transform .25s,box-shadow .25s;box-shadow:0 6px 18px rgba(236,72,153,.32)}
+.anni-close:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 10px 24px rgba(236,72,153,.42)}
+.anni-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.anni-particles .p{position:absolute;width:6px;height:6px;border-radius:50%;animation:pFall linear forwards}
+@keyframes pFall{0%{opacity:1;transform:translateY(-10px) rotate(0)}100%{opacity:0;transform:translateY(260px) rotate(360deg)}}
+
+/* ---------- FAB + 移动底栏 + 涟漪 + toast ---------- */
+.fab{position:fixed;right:24px;bottom:24px;z-index:60;width:60px;height:60px;border-radius:20px;background:var(--g1);color:#fff;font-size:28px;display:grid;place-items:center;box-shadow:0 14px 34px rgba(99,102,241,.5);transition:transform .3s,box-shadow .3s}
+.fab:hover{transform:translateY(-4px) scale(1.05);box-shadow:0 20px 44px rgba(99,102,241,.6)}
+.fab:active{transform:scale(.94)}
+.bottom-nav{display:none}
+@media(max-width:760px){
+  .topnav{padding:10px 14px;gap:8px}
+  .logo{gap:0}
+  .logo>span:last-child{display:none}
+  .logo .mark{width:38px;height:38px;border-radius:13px}
+  .navpills{display:none}
+  .nav-right{margin-left:auto}
+  .clock-box{gap:8px}
+  .weather-chip{height:38px;padding:4px 10px;border-radius:13px}
+  .w-emoji{font-size:20px}
+  .w-main b{font-size:13px}
+  .w-main span{max-width:54px;font-size:9.5px}
+  .w-sub{display:none}
+  .sync-ico{width:38px;height:38px;font-size:17px}
+  .sync-tip{right:-2px}
+  .bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:55;justify-content:space-around;padding:10px 6px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.7);backdrop-filter:blur(20px);border-top:1px solid var(--line)}
+  @media (prefers-color-scheme: dark){.bottom-nav{background:rgba(14,11,30,.7)}}
+  .bn{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--muted);padding:4px 8px;border-radius:12px;transition:color .2s}
+  .bn .e{font-size:20px}
+  .bn.active{color:#6366f1}
+  .fab{bottom:82px}
+  .clock{display:none}
+  .hero h1{font-size:clamp(34px,10vw,54px)}
+}
+.ripple{position:absolute;border-radius:50%;transform:scale(0);background:rgba(255,255,255,.55);animation:rip .6s linear;pointer-events:none}
+@keyframes rip{to{transform:scale(4);opacity:0}}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(20px);z-index:80;background:var(--ink);color:#fff;padding:12px 22px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;transition:all .3s;box-shadow:var(--shadow-lg);pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+<!-- 表格解析库 -->
+<script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- 资讯聚合数据（由 brilliantz111/Autoria 仓库的 GitHub Actions 每 2 小时生成） -->
+<script defer src="https://cdn.jsdelivr.net/gh/brilliantz111/Autoria@main/news.js"></script>
+</head>
+<body>
+
+<!-- 视差光斑 -->
+<div class="blobs" id="blobs"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
+<!-- 顶栏（毛玻璃 + Pill导航） -->
+<header class="topnav" id="topnav">
+  <div class="logo"><span class="mark">✺</span><span>Autoria 的<b>工作台</b></span></div>
+  <nav class="navpills" id="navpills">
+    <button class="pill active" data-view="home">📋 任务</button>
+    <button class="pill" data-view="words">📖 背单词</button>
+    <button class="pill" data-view="speak">🗣️ 口语</button>
+    <button class="pill" data-view="fitness">💪 健身</button>
+    <button class="pill" data-view="news">📰 资讯</button>
+  </nav>
+  <div class="nav-right">
+    <div class="clock-box">
+      <div class="weather-wrap" id="weatherWrap">
+        <button class="weather-chip" id="weatherChip" title="天气">
+          <span class="w-emoji" id="wEmoji">⛅</span>
+          <span class="w-main"><b id="wTemp">--°</b><span id="wCity">定位中…</span></span>
+          <span class="w-sub" id="wSub"></span>
+        </button>
+        <div class="weather-pop" id="weatherPop" hidden></div>
+      </div>
+      <div class="clock" id="clock"><span id="clk">--:--</span><small id="clkd">—</small></div>
+      <div class="sync-wrap" id="syncWrap">
+        <button class="sync-ico" id="syncIconBtn" title="云端同步">☁️</button>
+        <span class="sync-tip" id="syncTip"></span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- HERO 区 -->
+  <section class="hero" id="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow" id="heroEyebrow">Good day · 2026</div>
+        <h1 id="heroTitle">你好，<span class="grad">Autoria</span> 👋<br>今天也想<span class="grad">闪闪发光</span>。</h1>
+        <div class="hero-cta">
+          <button class="btn btn-pri ripple-host" id="ctaStart">开始今天 →</button>
+          <button class="btn btn-ghost ripple-host" data-view="words">去背单词</button>
+        </div>
+      </div>
+      <div class="float-cards" id="floatCards">
+        <div class="fcard fc1 reveal"><div class="lbl">今日待办</div><div class="val" id="heroTodo">0 / 0</div></div>
+        <div class="fcard fc2 reveal"><div class="lbl">连续打卡</div><div class="val" id="heroStreak">0 天</div></div>
+        <div class="fcard fc3 reveal"><div class="lbl">已学词汇</div><div class="val" id="heroWords">0</div></div>
+      </div>
+    </div>
+  </section>
+
+<!-- 生日横幅（12 月 15 日自动出现） -->
+      <div class="birthday-banner" id="birthdayBanner">
+        <span class="float">🎂</span><span class="float">🎉</span><span class="float">✨</span>
+        Autoria，生日快乐！愿新的一岁，所想皆如愿。
+      </div>
+
+      <!-- 纪念日横幅（每年 4 月 10 日自动弹出） -->
+      <div class="anni-banner" id="anniBanner">
+        <div class="anni-bg"></div>
+        <div class="anni-content">
+          <div class="anni-hearts">💕 💗 💕 💖 💗 💕</div>
+          <div class="anni-title">💍 纪念日快乐</div>
+          <div class="anni-years" id="anniYears">第 3 年</div>
+          <div class="anni-msg">从 2023.4.10 到今天，感谢一路同行 ❤️<br>愿往后余生，年年有你，岁岁平安。</div>
+          <button class="anni-close" id="anniClose">收起 ✦</button>
+        </div>
+        <div class="anni-particles" id="anniParticles"></div>
+      </div>
+
+      <!-- ========== 视图：任务看板 ========== -->
+      <section class="view active" id="view-home">
+        <div class="section-head"><h2>任务看板</h2></div>
+        <div class="grid grid-home">
+          <div class="card col-span-7 reveal">
+            <h2>✅ 待办事项 <span class="badge" id="todoBadge">0 待完成</span></h2>
+            <div class="todo-add">
+              <input id="todoInput" placeholder="快速添加，回车确认" maxlength="80">
+              <button class="btn-accent ripple-host" id="todoAddBtn">添加</button>
+            </div>
+            <ul class="todo-list" id="todoList"></ul>
+            <button class="todo-clear" id="todoClearBtn">清除已完成</button>
+          </div>
+          <div class="card col-span-5 reveal">
+            <h2>🎯 今日目标</h2>
+            <input class="goal-input" id="goalInput" placeholder="写下今天最重要的一件事…" maxlength="60">
+            <h2 style="margin-top:22px">📈 今日进度</h2>
+            <div class="progress-num" id="progressNum">0 <span>/ 0 项</span></div>
+            <div class="progress-bar"><i id="progressBar"></i></div>
+            <div class="progress-tip" id="progressTip">添加今天的第一个待办吧</div>
+          </div>
+          <div class="card col-span-5 reveal">
+            <h2>💡 灵感便签</h2>
+            <textarea class="note-area" id="noteArea" placeholder="随手记点什么，自动保存，刷新不丢…"></textarea>
+            <div class="note-status" id="noteStatus"></div>
+          </div>
+          <div class="card col-span-4 reveal">
+            <h2>🍅 专注计时</h2>
+            <div class="pomo">
+              <div class="pomo-time" id="pomoTime">25:00</div>
+              <div class="pomo-bar"><i id="pomoBar"></i></div>
+              <div class="pomo-btns">
+                <button class="primary ripple-host" id="pomoStartBtn">开始</button>
+                <button class="ripple-host" id="pomoResetBtn">重置</button>
+              </div>
+            </div>
+          </div>
+          <div class="card col-span-3 reveal">
+            <h2>🔗 快捷入口</h2>
+            <div class="link-grid" id="linkGrid"></div>
+            <button class="link-toggle" id="linkToggleBtn">＋ 添加</button>
+            <div class="link-add-form" id="linkForm">
+              <input id="linkName" placeholder="名称" maxlength="10">
+              <input id="linkUrl" placeholder="网址，如 bilibili.com">
+              <button class="btn-accent" id="linkAddBtn">保存</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== 视图：背单词 ========== -->
+      <section class="view" id="view-words">
+        <div class="section-head"><h2>背单词</h2></div>
+        <div class="grid grid-home">
+          <div class="card col-span-5 reveal">
+            <h2>📖 雅思词库</h2>
+            <div class="word-stats" id="wordStats"></div>
+            <div class="word-target">
+              每日新词目标
+              <input type="number" id="wordTarget" min="5" max="50" step="5">
+              个
+            </div>
+            <div class="progress-bar" style="margin-bottom:4px"><i id="wordBar"></i></div>
+            <div class="progress-tip" id="wordTip"></div>
+          </div>
+          <div class="card col-span-7 reveal">
+            <div class="word-card" id="wordCard">
+              <div class="word-big"><span id="wordText">—</span><button class="word-speak" id="wordSpeak" title="朗读发音">🔊</button></div>
+              <div class="word-phonetic" id="wordPhonetic"></div>
+              <div class="word-meaning" id="wordMeaning"></div>
+              <div class="word-example" id="wordExample"></div>
+              <div class="word-aids" id="wordAids"></div>
+              <div class="word-btns" id="wordBtns"></div>
+            </div>
+            <div class="word-done" id="wordDone" style="display:none">
+              <div class="big">🎉</div>
+              <p id="wordDoneText">今日任务全部完成，明天继续！</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== 视图：健身任务 ========== -->
+      <section class="view" id="view-fitness">
+        <div class="section-head"><h2>健身任务</h2><span class="hint">每日打卡 · 每周维度 · 本周计划</span></div>
+        <div class="grid grid-home">
+          <div class="card col-span-6 reveal">
+            <h2>💪 每日打卡 <span class="badge" id="fitTodayBadge"></span></h2>
+            <div class="fit-check-row">
+              <div class="fit-streak"><span>连续打卡</span> <b id="fitStreak">0</b> <span>天</span></div>
+              <button class="btn-accent" id="fitCheckBtn" style="padding:9px 18px">打卡今日训练</button>
+            </div>
+            <div class="fit-cal">
+              <div class="fit-cal-head">
+                <button class="mini-btn" id="fitCalPrev" title="上个月">‹</button>
+                <span id="fitCalMonth"></span>
+                <button class="mini-btn" id="fitCalNext" title="下个月">›</button>
+              </div>
+              <div class="fit-cal-grid" id="fitCalGrid"></div>
+              <div class="fit-cal-foot">本月已打卡 <b id="fitCalCount">0</b> 天 · 累计 <b id="fitTotal">0</b> 天</div>
+            </div>
+          </div>
+          <div class="card col-span-6 reveal">
+            <h2>📏 每周维度记录</h2>
+            <div class="fit-monday" id="fitMonday">📢 今天是周一，记得测量并录入本周维度！</div>
+            <div class="fit-form" id="fitForm">
+              <div><label>体重 (kg)</label><input type="number" step="0.1" data-k="weight"></div>
+              <div><label>胸围 (cm)</label><input type="number" step="0.1" data-k="chest"></div>
+              <div><label>腰围 (cm)</label><input type="number" step="0.1" data-k="waist"></div>
+              <div><label>臀围 (cm)</label><input type="number" step="0.1" data-k="hip"></div>
+              <div><label>臂围 (cm)</label><input type="number" step="0.1" data-k="arm"></div>
+              <div><label>腿围 (cm)</label><input type="number" step="0.1" data-k="thigh"></div>
+            </div>
+            <button class="btn-accent" id="fitSaveBtn" style="padding:9px 18px">保存本次记录</button>
+            <div id="fitHistoryWrap" style="margin-top:16px; overflow-x:auto"></div>
+          </div>
+          <div class="card col-span-12 reveal">
+            <h2>📋 本周训练计划</h2>
+            <div class="day-pills" id="dayPills"></div>
+            <div id="planDetail"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== 视图：练口语 ========== -->
+      <section class="view" id="view-speak">
+        <div class="section-head"><h2>练口语</h2><span class="hint">雅思口语 · 纯语音陪练</span></div>
+        <div class="card speak-card reveal">
+          <div class="speak-head">
+            <h2>🗣️ 模拟考官 <span class="badge">雅思口语智能陪练</span></h2>
+            <button class="mini-btn" id="speakNewTopic">🔄 换话题</button>
+          </div>
+          <div class="speak-box" id="speakBox"></div>
+          <div class="speak-vocab" id="speakVocab"></div>
+          <div class="speak-ctrl">
+            <div class="speak-lang">
+              <button class="chipf active" data-lang="en-US" type="button">English</button>
+              <button class="chipf" data-lang="zh-CN" type="button">中文</button>
+            </div>
+            <button class="mic-btn" id="micBtn" type="button" title="点击开始说话">🎙️ 点击说话</button>
+            <span class="speak-status" id="speakStatus">点击麦克风，用英语回答</span>
+          </div>
+          <p class="speak-tip">🎙️ 纯语音陪练：点击麦克风用英语回答，考官问题会自动朗读；评分与追问也以语音反馈。词伙宝盒可点击听发音。建议使用 Chrome / Edge 以获得最佳识别。坚持每天练 1 个话题，开口更自信。</p>
+        </div>
+      </section>
+
+      <!-- ========== 视图：资讯 ========== -->
+      <section class="view" id="view-news">
+        <div class="section-head"><h2>资讯</h2><span class="hint">科技 / 金融 / 游戏 · 每日热度排序</span></div>
+        <div class="card reveal">
+          <div class="news-head">
+            <h2 id="newsTitle" style="margin-bottom:0">🔬 科技资讯</h2>
+            <button class="news-refresh" id="newsRefresh">↻ 刷新</button>
+          </div>
+          <div class="news-tabs" id="newsTabs">
+            <button class="ntab active" data-feed="tech">🔬 科技资讯</button>
+            <button class="ntab" data-feed="finance">💰 金融资讯</button>
+            <button class="ntab" data-feed="game">🎮 游戏资讯</button>
+          </div>
+          <ul class="news-list" id="newsList"></ul>
+          <div id="newsSentinel" style="height:1px"></div>
+          <div class="news-state" id="newsState"></div>
+        </div>
+      </section>
+
+
+</main>
+
+<!-- 移动端底栏 -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="bn active" data-view="home"><span class="e">📋</span>任务</button>
+  <button class="bn" data-view="words"><span class="e">📖</span>单词</button>
+  <button class="bn" data-view="speak"><span class="e">🗣️</span>口语</button>
+  <button class="bn" data-view="fitness"><span class="e">💪</span>健身</button>
+  <button class="bn" data-view="news"><span class="e">📰</span>资讯</button>
+</nav>
+
+<!-- FAB -->
+<button class="fab ripple-host" id="fab">＋</button>
+<div class="toast" id="toast"></div>
+</body>
+</html>
+
+<!-- vocablib.js（约 3.5MB 雅思词库）改为按需懒加载，避免拖慢首屏 -->
+<script>
+/* ============================================================
+   数据层：所有数据存在 localStorage 的 "myDesk" 键下
+   ============================================================ */
+const STORE_KEY = 'myDesk';
+// 云端同步：GitHub Gist。Token 不写入源码（避免公网部署泄露），
+// 由用户在本机首次使用时配置一次，存入 localStorage('ghToken')
+let GITHUB_TOKEN = (function () { try { return (localStorage.getItem('ghToken') || '').trim(); } catch (e) { return ''; } })();
+const GIST_ID = '66045e821009d40388255f7d48d27688';
+const GIST_FILENAME = 'mydesk.json';
+const defaultData = {
+  theme: 'light',
+  name: 'Autoria',
+  goal: { date: '', text: '' },
+  todos: [],
+  note: '',
+  links: [
+    { id: 1, name: 'B站', url: 'https://www.bilibili.com' },
+    { id: 2, name: '知乎', url: 'https://www.zhihu.com' },
+    { id: 3, name: 'GitHub', url: 'https://github.com' },
+    { id: 4, name: '百度', url: 'https://www.baidu.com' },
+    { id: 5, name: '微博', url: 'https://weibo.com' },
+    { id: 6, name: '翻译', url: 'https://fanyi.youdao.com' }
+  ],
+  words: { target: 15, prog: {}, today: { date: '', new: 0, rev: 0 } },
+  fitness: { checkins: ['2026-07-24','2026-07-27','2026-07-29','2026-07-31','2026-08-03','2026-08-04','2026-08-06'], measures: [], plan: '' },
+  weather: { city: '', lat: null, lon: null, fixed: false, cache: null },   // fixed=true 表示用户手动选过城市
+  news: {},
+  sync: { lastSync: null }   // 多端同步（GitHub Gist，Token 内嵌，自动运行）
+};
+// 始终确保「要求补录的历史打卡日」存在于工作数据中（按日期并集并入，不覆盖用户已有记录）。
+// 同理防止被云端/本地旧数据的 fitness 整体替换而丢失默认补录的几天。
+function ensureSeedFitness(d) {
+  const seed = (defaultData.fitness && defaultData.fitness.checkins) || [];
+  if (!seed.length) return d;
+  d.fitness = d.fitness || { checkins: [], measures: [], plan: '' };
+  d.fitness.checkins = d.fitness.checkins || [];
+  const set = new Set(d.fitness.checkins);
+  let added = 0;
+  for (const dt of seed) { if (!set.has(dt)) { d.fitness.checkins.push(dt); added++; } }
+  if (added) d.fitness.checkins.sort();
+  return d;
+}
+function load() {
+  let stored = {};
+  try { stored = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) {}
+  const d = Object.assign({}, defaultData, stored);
+  ensureSeedFitness(d);
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(d)); } catch (e) {}
+  return d;
+}
+let _pushTimer = null;
+let syncReady = false;   // 首次成功连上 GitHub 后才自动推送，避免未配置时一直报错
+let _lastPushedHash = ''; // 上次推送的 pickSync() 子集 hash，相同则跳过
+function _syncHash() { return JSON.stringify(pickSync()); }
+function save() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  if (GITHUB_TOKEN && GIST_ID && syncReady) {
+    clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(() => {
+      const h = _syncHash();
+      if (h !== _lastPushedHash) { _lastPushedHash = h; syncPush(); }
+    }, 800);   // 数据确实变更时才推送到云端
+  }
+}
+let data = load();
+
+const todayStr = () => new Date().toISOString().slice(0, 10);
+const uid = () => Date.now() + Math.floor(Math.random() * 1000);
+const $ = id => document.getElementById(id);
+
+/* ============================================================
+   个人信息：名字 / 生日（12-15）/ 欢迎语
+   ============================================================ */
+const BIRTHDAY = '12-15';
+const USER_NAME = () => data.name || 'Autoria';
+
+function isBirthday() {
+  const n = new Date();
+  return `${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}` === BIRTHDAY;
+}
+function showToast(text, ms = 2800) {
+  const t = $('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+/* ============================================================
+   主题切换
+   ============================================================ */
+function applyTheme() {
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+}
+// 跟随系统主题：系统切换深浅色时实时响应
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+applyTheme();
+
+/* ============================================================
+   预览风格交互：视差滚动 / 涟漪 / 滚动揭示
+   ============================================================ */
+(function() {
+  // 桌面端不做逐帧视差：固定大面积滤镜层在滚动时会放大重绘成本。
+  // 手机端保留轻量视差，并只在顶栏状态变化时切换阴影。
+  const isMobile = window.matchMedia('(max-width: 760px)');
+  const blobs = document.getElementById('blobs');
+  const nav = document.getElementById('topnav');
+  const heroT = document.getElementById('heroTitle');
+  const heroE = document.getElementById('heroEyebrow');
+  let ticking = false;
+  let navScrolled = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function() {
+      const y = window.scrollY;
+      // 桌面端只做 hero 轻量视差（单元素、成本极低）；blobs 大模糊层在桌面保持静止，避免滚动期间重绘
+      if (isMobile.matches && blobs) blobs.style.transform = 'translate3d(0,' + (y * 0.18) + 'px,0)';
+      if (heroT) heroT.style.transform = 'translate3d(0,' + (y * 0.06) + 'px,0)';
+      if (heroE) heroE.style.transform = 'translate3d(0,' + (y * 0.09) + 'px,0)';
+      const nextNavScrolled = y > 8;
+      if (nav && nextNavScrolled !== navScrolled) {
+        nav.classList.toggle('scrolled', nextNavScrolled);
+        navScrolled = nextNavScrolled;
+      }
+      ticking = false;
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // Material 涟漪
+  document.querySelectorAll('.ripple-host').forEach(function(el) {
+    el.addEventListener('pointerdown', function(e) {
+      const r = el.getBoundingClientRect();
+      const s = Math.max(r.width, r.height);
+      const rip = document.createElement('span');
+      rip.className = 'ripple';
+      rip.style.width = rip.style.height = s + 'px';
+      rip.style.left = (e.clientX - r.left - s / 2) + 'px';
+      rip.style.top = (e.clientY - r.top - s / 2) + 'px';
+      el.style.position = el.style.position || 'relative';
+      el.style.overflow = 'hidden';
+      el.appendChild(rip);
+      setTimeout(function() { rip.remove(); }, 550);
+    });
+  });
+
+  // 滚动揭示动画
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries) {
+      entries.forEach(function(en) {
+        if (en.isIntersecting) {
+          en.target.classList.add('in');
+          io.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(function(el) { io.observe(el); });
+  }
+})();
+
+/* ============================================================
+   顶栏：时钟 / 日期 / 问候 / 生日
+   ============================================================ */
+function tick() {
+  const now = new Date();
+  const p = n => String(n).padStart(2, '0');
+  $('clk').textContent = `${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`;
+  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+  let line = `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日 · 星期${weekDays[now.getDay()]}`;
+  // 写入日期到顶栏小字 + 兼容旧 dateLine
+  if ($('clkd')) $('clkd').textContent = line;
+  if ($('dateLine')) $('dateLine').textContent = line;
+  const h = now.getHours();
+  if ($('greetWord')) $('greetWord').textContent =
+    h < 6 ? '夜深了' : h < 12 ? '早上好' : h < 14 ? '中午好' : h < 18 ? '下午好' : '晚上好';
+}
+tick();
+setInterval(tick, 1000);
+
+if (isBirthday()) $('birthdayBanner').classList.add('show');
+
+/* ---------- 纪念日（2023.4.10，每年弹出） ---------- */
+const ANNIVERSARY = '04-10';   // 月-日
+function isAnniversary() {
+  const n = new Date();
+  return `${String(n.getMonth() + 1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` === ANNIVERSARY;
+}
+function anniYears() {
+  const n = new Date();
+  const y = n.getFullYear();
+  const m = n.getMonth(), d = n.getDate();
+  // 如果已过今年4.10，算今年；否则算去年
+  return (m > 3 || (m === 3 && d >= 10)) ? y - 2023 : y - 2024;
+}
+if (isAnniversary()) {
+  $('anniYears').textContent = `第 ${anniYears()} 年`;
+  $('anniBanner').classList.add('show');
+  // 粒子飘落效果
+  const container = $('anniParticles');
+  const colors = ['#a5b4fc','#818cf8','#c4b5fd','#93c5fd','#a78bfa','#bfdbfe'];
+  for (let i = 0; i < 24; i++) {
+    const p = document.createElement('span');
+    p.className = 'p';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.width = p.style.height = (4 + Math.random() * 6) + 'px';
+    p.style.animationDuration = (2 + Math.random() * 3) + 's';
+    p.style.animationDelay = (Math.random() * 2) + 's';
+    container.appendChild(p);
+  }
+}
+$('anniClose').onclick = () => {
+  $('anniBanner').style.transition = 'all .4s ease';
+  $('anniBanner').style.opacity = '0';
+  $('anniBanner').style.transform = 'scale(.95) translateY(-10px)';
+  setTimeout(() => { $('anniBanner').classList.remove('show'); $('anniBanner').style.cssText = ''; }, 400);
+};
+
+/* ============================================================
+   导航与视图切换
+   ============================================================ */
+let currentFeed = 'tech';
+function switchTo(view, feed) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const target = $('view-' + view);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.pill').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === view);
+  });
+  // 移动端 bottom-nav
+  document.querySelectorAll('.bn').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === view);
+  });
+  // 非首页彻底收起 Hero，避免透明内容继续占据大块高度
+  const isHome = view === 'home';
+  const hero = $('hero');
+  if (hero) hero.classList.toggle('is-hidden', !isHome);
+  document.body.classList.toggle('subview', !isHome);
+  if (view === 'news') { loadNews(currentFeed); }
+  if (view === 'words') startWordSession();
+  if (view === 'speak') openSpeak();
+  if (view === 'fitness') renderFitness();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+// 绑定导航点击（顶栏 pill + 移动底栏 bn）
+document.querySelectorAll('.pill').forEach(btn => {
+  btn.onclick = () => switchTo(btn.dataset.view);
+});
+document.querySelectorAll('.bn').forEach(btn => {
+  btn.onclick = () => switchTo(btn.dataset.view);
+});
+// Hero CTA：回到任务看板并聚焦待办输入
+$('ctaStart').onclick = () => { switchTo('home'); setTimeout(() => $('todoInput').focus(), 380); };
+// FAB：快速添加待办
+$('fab').onclick = () => { switchTo('home'); setTimeout(() => $('todoInput').focus(), 380); showToast('✍️ 快速添加今日待办'); };
+
+/* ============================================================
+   今日目标（按天保存，跨天清空）
+   ============================================================ */
+const goalInput = $('goalInput');
+if (data.goal.date === todayStr()) goalInput.value = data.goal.text;
+goalInput.addEventListener('input', () => { data.goal = { date: todayStr(), text: goalInput.value }; save(); });
+
+/* ============================================================
+   待办事项
+   ============================================================ */
+const todoListEl = $('todoList');
+function renderTodos() {
+  todoListEl.innerHTML = '';
+  if (!data.todos.length) todoListEl.innerHTML = '<li class="todo-empty">暂无待办，添加一条吧</li>';
+  data.todos.forEach(t => {
+    const li = document.createElement('li');
+    li.className = 'todo-item' + (t.done ? ' done' : '');
+    li.innerHTML = `
+      <button class="todo-check ${t.done ? 'done' : ''}">${t.done ? '✓' : ''}</button>
+      <span class="todo-text"></span>
+      <button class="todo-del" title="删除">✕</button>`;
+    li.querySelector('.todo-text').textContent = t.text;
+    li.querySelector('.todo-check').onclick = () => {
+      t.done = !t.done; t.doneDate = t.done ? todayStr() : '';
+      save(); renderTodos(); renderProgress();
+    };
+    li.querySelector('.todo-del').onclick = () => {
+      data.todos = data.todos.filter(x => x.id !== t.id);
+      save(); renderTodos(); renderProgress();
+    };
+    todoListEl.appendChild(li);
+  });
+  $('todoBadge').textContent = `${data.todos.filter(t => !t.done).length} 待完成`;
+}
+function addTodo() {
+  const text = $('todoInput').value.trim();
+  if (!text) return;
+  data.todos.unshift({ id: uid(), text, done: false, created: todayStr(), doneDate: '' });
+  $('todoInput').value = '';
+  save(); renderTodos(); renderProgress();
+}
+$('todoAddBtn').onclick = addTodo;
+$('todoInput').addEventListener('keydown', e => { if (e.key === 'Enter') addTodo(); });
+$('todoClearBtn').onclick = () => { data.todos = data.todos.filter(t => !t.done); save(); renderTodos(); renderProgress(); };
+renderTodos();
+
+/* ============================================================
+   灵感便签（自动保存）
+   ============================================================ */
+const noteArea = $('noteArea');
+noteArea.value = data.note;
+let noteTimer = null;
+noteArea.addEventListener('input', () => {
+  $('noteStatus').textContent = '保存中…';
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(() => {
+    data.note = noteArea.value; save();
+    $('noteStatus').textContent = '已自动保存 ' + new Date().toLocaleTimeString('zh-CN');
+  }, 300);
+});
+
+/* ============================================================
+   快捷入口
+   ============================================================ */
+const linkColors = ['#6366f1', '#e8762d', '#2f9e6e', '#d1457b', '#3d8bfd', '#8b5cf6', '#c2410c', '#0e9aa7'];
+function renderLinks() {
+  const grid = $('linkGrid');
+  grid.innerHTML = '';
+  data.links.forEach((l, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'link-item';
+    wrap.innerHTML = `
+      <a href="${l.url}" target="_blank" rel="noopener">
+        <span class="link-icon" style="background:${linkColors[i % linkColors.length]}"></span>
+        <span></span>
+      </a>
+      <button class="link-del" title="删除">✕</button>`;
+    wrap.querySelector('.link-icon').textContent = l.name.slice(0, 1);
+    wrap.querySelector('a span:last-child').textContent = l.name;
+    wrap.querySelector('.link-del').onclick = () => { data.links = data.links.filter(x => x.id !== l.id); save(); renderLinks(); };
+    grid.appendChild(wrap);
+  });
+}
+$('linkToggleBtn').onclick = () => $('linkForm').classList.toggle('show');
+$('linkAddBtn').onclick = () => {
+  const name = $('linkName').value.trim();
+  let url = $('linkUrl').value.trim();
+  if (!name || !url) return;
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  data.links.push({ id: uid(), name, url });
+  $('linkName').value = ''; $('linkUrl').value = '';
+  $('linkForm').classList.remove('show');
+  save(); renderLinks();
+};
+renderLinks();
+
+/* ============================================================
+   番茄钟（25 分钟）
+   ============================================================ */
+const POMO_TOTAL = 25 * 60;
+let pomoLeft = POMO_TOTAL, pomoTimer = null;
+function renderPomo() {
+  $('pomoTime').textContent =
+    `${String(Math.floor(pomoLeft / 60)).padStart(2, '0')}:${String(pomoLeft % 60).padStart(2, '0')}`;
+  $('pomoBar').style.width = ((POMO_TOTAL - pomoLeft) / POMO_TOTAL * 100) + '%';
+}
+function stopPomo() { clearInterval(pomoTimer); pomoTimer = null; $('pomoStartBtn').textContent = '开始'; }
+$('pomoStartBtn').onclick = () => {
+  if (pomoTimer) { stopPomo(); $('pomoStartBtn').textContent = '继续'; return; }
+  $('pomoStartBtn').textContent = '暂停';
+  pomoTimer = setInterval(() => {
+    pomoLeft--; renderPomo();
+    if (pomoLeft <= 0) {
+      stopPomo(); pomoLeft = POMO_TOTAL; renderPomo();
+      alert('🍅 25 分钟专注结束，休息 5 分钟吧！');
+    }
+  }, 1000);
+};
+$('pomoResetBtn').onclick = () => { stopPomo(); pomoLeft = POMO_TOTAL; renderPomo(); };
+renderPomo();
+
+/* ============================================================
+   今日进度
+   ============================================================ */
+function renderProgress() {
+  const today = todayStr();
+  const todays = data.todos.filter(t => t.created === today || t.doneDate === today);
+  const done = todays.filter(t => t.done).length;
+  const total = todays.length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  $('progressNum').innerHTML = `${done} <span>/ ${total} 项</span>`;
+  $('progressBar').style.width = pct + '%';
+  $('progressTip').textContent =
+    !total ? '添加今天的第一个待办吧'
+    : pct === 100 ? '🎉 今日任务全部完成！'
+    : pct >= 60 ? '进展不错，继续加油' : '一步一步来，别急';
+  updateHero();
+}
+// Hero 漂浮数据卡：接入真实数据（今日待办 / 连续打卡 / 已学词汇）
+function updateHero() {
+  const hd = $('heroTodo');
+  if (hd) {
+    const t0 = todayStr();
+    const todays = data.todos.filter(t => t.created === t0 || t.doneDate === t0);
+    hd.textContent = todays.filter(t => t.done).length + ' / ' + todays.length;
+  }
+  const hs = $('heroStreak');
+  if (hs) {
+    const set = new Set(data.fitness.checkins);
+    let streak = 0; const d = new Date();
+    if (!set.has(todayStr())) d.setDate(d.getDate() - 1);
+    while (set.has(d.toISOString().slice(0, 10))) { streak++; d.setDate(d.getDate() - 1); }
+    hs.textContent = streak + ' 天';
+  }
+  const hw = $('heroWords');
+  if (hw) hw.textContent = Object.keys(data.words.prog).length;
+}
+renderProgress();
+
+/* ============================================================
+   背单词 · 雅思词库（类"不背单词"：复习优先 + 记忆曲线）
+   ============================================================ */
+const WORDS = [
+["abandon","əˈbændən","v. 放弃；抛弃","They had to abandon the sinking ship."],
+["abstract","ˈæbstrækt","adj. 抽象的；n. 摘要","The abstract of the paper is one page long."],
+["abundant","əˈbʌndənt","adj. 丰富的，充裕的","The region has abundant natural resources."],
+["accelerate","əkˈseləreɪt","v. 加速；促进","The car accelerated to overtake the truck."],
+["accommodate","əˈkɒmədeɪt","v. 容纳；为…提供住宿","The hotel can accommodate 500 guests."],
+["accompany","əˈkʌmpəni","v. 陪伴；伴随","Children must be accompanied by an adult."],
+["accomplish","əˈkʌmplɪʃ","v. 完成；实现","We accomplished our goal ahead of schedule."],
+["accumulate","əˈkjuːmjəleɪt","v. 积累；堆积","She accumulated a fortune through hard work."],
+["accurate","ˈækjərət","adj. 精确的，准确的","The report must be accurate and detailed."],
+["acknowledge","əkˈnɒlɪdʒ","v. 承认；致谢","He acknowledged his mistake in public."],
+["acquire","əˈkwaɪə","v. 获得；习得","She acquired a good knowledge of French."],
+["adapt","əˈdæpt","v. 适应；改编","Animals adapt quickly to new environments."],
+["adequate","ˈædɪkwət","adj. 足够的；合格的","The room was small but adequate."],
+["adjacent","əˈdʒeɪsnt","adj. 邻近的，毗连的","The garden is adjacent to the library."],
+["advocate","ˈædvəkeɪt","v. 提倡；拥护","They advocate a ban on smoking in public."],
+["allocate","ˈæləkeɪt","v. 分配；划拨","Funds were allocated to rural schools."],
+["alter","ˈɔːltə","v. 改变，改动","Nothing can alter the facts."],
+["alternative","ɔːlˈtɜːnətɪv","n. 替代品；adj. 可替代的","We need an alternative source of energy."],
+["ambiguous","æmˈbɪɡjuəs","adj. 含糊的，模棱两可的","His answer was deliberately ambiguous."],
+["amend","əˈmend","v. 修改，修订","The law was amended last year."],
+["anticipate","ænˈtɪsɪpeɪt","v. 预期；期待","We anticipate a rise in sales."],
+["apparent","əˈpærənt","adj. 明显的；表面上的","It was apparent that she was unhappy."],
+["approach","əˈprəʊtʃ","v. 接近；n. 方法","We need a new approach to the problem."],
+["appropriate","əˈprəʊpriət","adj. 合适的，恰当的","Wear appropriate clothes for the interview."],
+["approximate","əˈprɒksɪmət","adj. 近似的，大约的","The approximate cost is 200 yuan."],
+["aspect","ˈæspekt","n. 方面；外观","Consider every aspect of the plan."],
+["assess","əˈses","v. 评估，评价","Experts assessed the damage after the flood."],
+["assign","əˈsaɪn","v. 分配；指派","Each student was assigned a task."],
+["assume","əˈsjuːm","v. 假定；承担","I assume you have read the report."],
+["attain","əˈteɪn","v. 达到；获得","She attained her ambition at last."],
+["attribute","əˈtrɪbjuːt","v. 归因于","He attributed his success to hard work."],
+["authority","ɔːˈθɒrəti","n. 权威；当局","The local authority closed the road."],
+["available","əˈveɪləbl","adj. 可用的；有空的","The book is available in the library."],
+["benefit","ˈbenɪfɪt","n. 益处；v. 受益","Regular exercise benefits your health."],
+["bias","ˈbaɪəs","n. 偏见，偏向","The report showed a clear bias."],
+["capable","ˈkeɪpəbl","adj. 有能力的","She is capable of handling the crisis."],
+["capacity","kəˈpæsəti","n. 容量；能力","The stadium has a capacity of 50,000."],
+["category","ˈkætəɡəri","n. 类别，种类","Books are sorted into different categories."],
+["cease","siːs","v. 停止，终止","The factory ceased production last month."],
+["challenge","ˈtʃælɪndʒ","n./v. 挑战","Climate change is a global challenge."],
+["circumstance","ˈsɜːkəmstəns","n. 环境；情况","Under no circumstances should you give up."],
+["cite","saɪt","v. 引用；引述","The author cited three studies in support."],
+["civilisation","ˌsɪvəlaɪˈzeɪʃn","n. 文明","Ancient civilisations left many ruins."],
+["clarify","ˈklærəfaɪ","v. 澄清，阐明","Could you clarify your last point?"],
+["coherent","kəʊˈhɪərənt","adj. 连贯的；有条理的","She gave a clear and coherent speech."],
+["collapse","kəˈlæps","v./n. 倒塌；崩溃","The bridge collapsed during the storm."],
+["commit","kəˈmɪt","v. 犯（错）；承诺","He committed himself to the project."],
+["compensate","ˈkɒmpenseɪt","v. 补偿，赔偿","Nothing can compensate for lost time."],
+["compile","kəmˈpaɪl","v. 汇编；编纂","They compiled a list of useful phrases."],
+["complex","ˈkɒmpleks","adj. 复杂的","The instructions are rather complex."],
+["component","kəmˈpəʊnənt","n. 成分；部件","Trust is a key component of friendship."],
+["comprehensive","ˌkɒmprɪˈhensɪv","adj. 全面的，综合的","We need a comprehensive review."],
+["comprise","kəmˈpraɪz","v. 包含，由…组成","The course comprises ten modules."],
+["conceal","kənˈsiːl","v. 隐藏，隐瞒","He concealed the truth from his family."],
+["conclude","kənˈkluːd","v. 总结；断定","We concluded the meeting at noon."],
+["consequence","ˈkɒnsɪkwəns","n. 后果，结果","Face the consequences of your actions."],
+["consensus","kənˈsensəs","n. 共识","There is a broad consensus on this issue."],
+["conservative","kənˈsɜːvətɪv","adj. 保守的","He holds conservative views on finance."],
+["considerable","kənˈsɪdərəbl","adj. 相当大的","The project saved considerable cost."],
+["consist","kənˈsɪst","v. 由…组成","The team consists of five members."],
+["constant","ˈkɒnstənt","adj. 持续的；恒定的","The noise is a constant annoyance."],
+["constitute","ˈkɒnstɪtjuːt","v. 构成，组成","Twelve months constitute a year."],
+["constrain","kənˈstreɪn","v. 限制，约束","Budget constraints slowed the work."],
+["construct","kənˈstrʌkt","v. 建造；构筑","They constructed a new bridge."],
+["consult","kənˈsʌlt","v. 咨询；查阅","Consult a doctor before taking it."],
+["consume","kənˈsjuːm","v. 消耗；消费","The device consumes little power."],
+["contemporary","kənˈtemprəri","adj. 当代的；同时代的","Contemporary art attracts young people."],
+["context","ˈkɒntekst","n. 背景；语境","You must read it in its context."],
+["contradict","ˌkɒntrəˈdɪkt","v. 反驳；与…矛盾","The data contradict the theory."],
+["contribute","kənˈtrɪbjuːt","v. 贡献；促成","Exercise contributes to good health."],
+["controversial","ˌkɒntrəˈvɜːʃl","adj. 有争议的","The topic is highly controversial."],
+["controversy","ˈkɒntrəvɜːsi","n. 争议","The plan sparked a heated controversy."],
+["convenient","kənˈviːniənt","adj. 方便的","Online banking is very convenient."],
+["conventional","kənˈvenʃənl","adj. 传统的；常规的","Conventional methods may not work."],
+["convert","kənˈvɜːt","v. 转变，转化","We convert sunlight into electricity."],
+["convince","kənˈvɪns","v. 使信服","She convinced me to join the club."],
+["cooperate","kəʊˈɒpəreɪt","v. 合作","Nations must cooperate on climate."],
+["corporate","ˈkɔːpərət","adj. 公司的；企业的","Corporate culture affects morale."],
+["correspond","ˌkɒrəˈspɒnd","v. 相符；通信","The result corresponds to our prediction."],
+["crucial","ˈkruːʃl","adj. 关键的，至关重要的","Timing is crucial to success."],
+["cumulative","ˈkjuːmjələtɪv","adj. 累积的","The cumulative effect is significant."],
+["curriculum","kəˈrɪkjələm","n. 课程","The school revised its curriculum."],
+["debate","dɪˈbeɪt","n./v. 辩论；讨论","The debate focused on education."],
+["decade","ˈdekeɪd","n. 十年","Great changes occurred in a decade."],
+["decline","dɪˈklaɪn","v./n. 下降；拒绝","Sales declined last quarter."],
+["dedicate","ˈdedɪkeɪt","v. 致力于","She dedicated her life to research."],
+["demonstrate","ˈdemənstreɪt","v. 证明；演示","The study demonstrates a clear link."],
+["deny","dɪˈnaɪ","v. 否认；拒绝给予","He denied any involvement."],
+["deprive","dɪˈpraɪv","v. 剥夺","Poor children are deprived of education."],
+["derive","dɪˈraɪv","v. 源于；获得","We derive pleasure from reading."],
+["despite","dɪˈspaɪt","prep. 尽管","Despite the rain, they went out."],
+["destiny","ˈdestəni","n. 命运","He believed in his own destiny."],
+["detect","dɪˈtekt","v. 察觉，发现","The test can detect the virus early."],
+["deteriorate","dɪˈtɪəriəreɪt","v. 恶化","His health began to deteriorate."],
+["deviate","ˈdiːvieɪt","v. 偏离","Do not deviate from the plan."],
+["discipline","ˈdɪsəplɪn","n. 纪律；学科","Self-discipline is the key to success."],
+["discriminate","dɪˈskrɪmɪneɪt","v. 歧视；区分","It is illegal to discriminate by age."],
+["displace","dɪsˈpleɪs","v. 取代；使离开家园","Machines displaced many workers."],
+["dispose","dɪˈspəʊz","v. 处理；处置","Dispose of waste properly."],
+["distinct","dɪˈstɪŋkt","adj. 明显的；独特的","The two ideas are quite distinct."],
+["distort","dɪˈstɔːt","v. 歪曲，扭曲","The media distorted the facts."],
+["distribute","dɪˈstrɪbjuːt","v. 分配；分发","Food was distributed to the refugees."],
+["diverse","daɪˈvɜːs","adj. 多样的","The city has a diverse population."],
+["dominant","ˈdɒmɪnənt","adj. 主导的；占优势的","English is a dominant language."],
+["draft","drɑːft","n. 草稿；v. 起草","He drafted a proposal last night."],
+["dramatic","drəˈmætɪk","adj. 戏剧性的；显著的","There was a dramatic drop in price."],
+["duration","djʊˈreɪʃn","n. 持续时间","The duration of the course is six weeks."],
+["economy","ɪˈkɒnəmi","n. 经济；节省","The local economy is recovering."],
+["elaborate","ɪˈlæbərət","adj. 详尽的；v. 详述","Please elaborate on your idea."],
+["eliminate","ɪˈlɪmɪneɪt","v. 消除，淘汰","We must eliminate poverty."],
+["emerge","ɪˈmɜːdʒ","v. 出现；浮现","A new trend emerged last year."],
+["emphasis","ˈemfəsɪs","n. 强调，重点","The emphasis is on practice."],
+["enhance","ɪnˈhɑːns","v. 提高，增强","Music can enhance your mood."],
+["enormous","ɪˈnɔːməs","adj. 巨大的","The project cost an enormous sum."],
+["ensure","ɪnˈʃʊə","v. 确保","Please ensure the door is locked."],
+["entire","ɪnˈtaɪə","adj. 全部的，整个的","The entire team attended the meeting."],
+["environment","ɪnˈvaɪrənmənt","n. 环境","We must protect the environment."],
+["equip","ɪˈkwɪp","v. 装备，配备","Schools equip students with skills."],
+["equivalent","ɪˈkwɪvələnt","adj. 等价的；n. 等价物","This is equivalent to a full day's work."],
+["essence","ˈesns","n. 本质，精髓","The essence of the issue is trust."],
+["establish","ɪˈstæblɪʃ","v. 建立；确立","The company was established in 1998."],
+["estimate","ˈestɪmeɪt","v./n. 估计","We estimate the cost at 10,000 yuan."],
+["evaluate","ɪˈvæljueɪt","v. 评价，评估","Teachers evaluate students fairly."],
+["evident","ˈevɪdənt","adj. 明显的","It is evident that he is tired."],
+["evolve","ɪˈvɒlv","v. 进化；逐步发展","Technology evolves rapidly."],
+["exceed","ɪkˈsiːd","v. 超过","Costs exceeded the budget."],
+["exclude","ɪkˈskluːd","v. 排除；不包括","The price excludes tax."],
+["exploit","ɪkˈsplɔɪt","v. 利用；开发","We must exploit solar energy fully."],
+["facilitate","fəˈsɪlɪteɪt","v. 促进；使便利","The app facilitates online learning."],
+["factor","ˈfæktə","n. 因素","Price is a key factor in choice."],
+["feasible","ˈfiːzəbl","adj. 可行的","The plan is technically feasible."],
+["fluctuate","ˈflʌktʃueɪt","v. 波动","Prices fluctuate with the season."],
+["focus","ˈfəʊkəs","n./v. 焦点；集中","Focus on the most important task."],
+["foundation","faʊnˈdeɪʃn","n. 基础；基金会","Education is the foundation of society."],
+["framework","ˈfreɪmwɜːk","n. 框架","We need a legal framework."],
+["fundamental","ˌfʌndəˈmentl","adj. 基本的","Trust is fundamental to teamwork."],
+["generate","ˈdʒenəreɪt","v. 产生；发电","Wind turbines generate electricity."],
+["genuine","ˈdʒenjʊɪn","adj. 真正的；真诚的","She showed genuine concern."],
+["global","ˈɡləʊbl","adj. 全球的","Global warming is a real threat."],
+["grant","ɡrɑːnt","v. 授予；n. 拨款","He was granted a scholarship."],
+["guarantee","ˌɡærənˈtiː","v./n. 保证","We guarantee the quality."],
+["habitat","ˈhæbɪtæt","n. 栖息地","Deforestation destroys animal habitats."],
+["highlight","ˈhaɪlaɪt","v. 强调；n. 亮点","The report highlights the risks."],
+["hypothesis","haɪˈpɒθəsɪs","n. 假设","The hypothesis needs testing."],
+["identify","aɪˈdentɪfaɪ","v. 识别；确认","We identified the main cause."],
+["ideology","ˌaɪdiˈɒlədʒi","n. 意识形态","Political ideology divides the nation."],
+["ignore","ɪɡˈnɔː","v. 忽视","You cannot ignore the problem."],
+["illustrate","ˈɪləstreɪt","v. 说明；图解","Let me illustrate with an example."],
+["immense","ɪˈmens","adj. 巨大的","The project brought immense benefits."],
+["impact","ˈɪmpækt","n./v. 影响","The policy had a huge impact."],
+["implement","ˈɪmplɪment","v. 实施，执行","We will implement the plan next month."],
+["implicate","ˈɪmplɪkeɪt","v. 牵连；暗示","The letter implicates several officials."],
+["implicit","ɪmˈplɪsɪt","adj. 含蓄的；隐含的","There was an implicit agreement."],
+["imply","ɪmˈplaɪ","v. 暗示","His words imply disagreement."],
+["incentive","ɪnˈsentɪv","n. 激励，诱因","Tax cuts are an incentive to invest."],
+["incorporate","ɪnˈkɔːpəreɪt","v. 包含；合并","The design incorporates user feedback."],
+["index","ˈɪndeks","n. 指数；索引","The cost index rose this year."],
+["inevitable","ɪnˈevɪtəbl","adj. 不可避免的","Change is inevitable in life."],
+["infrastructure","ˈɪnfrəstrʌktʃə","n. 基础设施","The city needs better infrastructure."],
+["inherent","ɪnˈhɪərənt","adj. 固有的","There are risks inherent in the plan."],
+["innovation","ˌɪnəˈveɪʃn","n. 创新","Innovation drives economic growth."],
+["insight","ˈɪnsaɪt","n. 洞察力","The book offers deep insight."],
+["inspire","ɪnˈspaɪə","v. 激励；启发","Her story inspired many people."],
+["install","ɪnˈstɔːl","v. 安装；任命","We installed solar panels."],
+["institute","ˈɪnstɪtjuːt","n. 机构；v. 建立","A new institute was set up."],
+["integral","ˈɪntɪɡrəl","adj. 不可或缺的","Trust is integral to friendship."],
+["integrate","ˈɪntɪɡreɪt","v. 整合；使融入","We should integrate theory and practice."],
+["integrity","ɪnˈteɡrəti","n. 诚信；完整","He is a man of integrity."],
+["intense","ɪnˈtens","adj. 强烈的","The competition is intense."],
+["interact","ˌɪntərˈækt","v. 互动","Children interact with peers at school."],
+["intervene","ˌɪntəˈviːn","v. 干预","The UN intervened in the conflict."],
+["involve","ɪnˈvɒlv","v. 涉及；包含","The job involves travel."],
+["isolate","ˈaɪsəleɪt","v. 孤立；隔离","The village was isolated by snow."],
+["justify","ˈdʒʌstɪfaɪ","v. 证明…正当","Nothing can justify violence."],
+["legislation","ˌledʒɪsˈleɪʃn","n. 立法","New legislation protects consumers."],
+["leisure","ˈleʒə","n. 休闲","People need leisure time to relax."],
+["liberal","ˈlɪbərəl","adj. 自由的；开明的","He has liberal views on art."],
+["limitation","ˌlɪmɪˈteɪʃn","n. 限制；局限","Every method has its limitations."],
+["locate","ləʊˈkeɪt","v. 位于；定位","The factory is located near the port."],
+["maintain","meɪnˈteɪn","v. 维持；保养","We must maintain public order."],
+["majority","məˈdʒɒrəti","n. 大多数","The majority supported the plan."],
+["manifest","ˈmænɪfest","v. 显现；adj. 明显的","The problem manifested last week."],
+["manipulate","məˈnɪpjəleɪt","v. 操纵；控制","He manipulated the data."],
+["maximise","ˈmæksɪmaɪz","v. 最大化","We aim to maximise efficiency."],
+["minority","maɪˈnɒrəti","n. 少数","A minority opposed the idea."],
+["modify","ˈmɒdɪfaɪ","v. 修改","We modified the design slightly."],
+["monitor","ˈmɒnɪtə","v. 监控；n. 显示器","Doctors monitored his heartbeat."],
+["motive","ˈməʊtɪv","n. 动机","What was his motive for lying?"],
+["negotiate","nɪˈɡəʊʃieɪt","v. 谈判","They negotiated a new contract."],
+["network","ˈnetwɜːk","n. 网络","The network covers the whole city."],
+["notion","ˈnəʊʃn","n. 概念；想法","He has no notion of danger."],
+["objective","əbˈdʒektɪv","n. 目标；adj. 客观的","Be objective when judging."],
+["oblige","əˈblaɪdʒ","v. 迫使；帮忙","I am obliged to reply."],
+["obtain","əbˈteɪn","v. 获得","She obtained a degree in law."],
+["obvious","ˈɒbviəs","adj. 明显的","The answer is obvious."],
+["occupy","ˈɒkjəpaɪ","v. 占据；占用","The sofa occupies much space."],
+["occur","əˈkɜː","v. 发生；出现","Accidents occur at night."],
+["offset","ˈɒfset","v. 抵消","Gains offset the losses."],
+["ongoing","ˈɒnɡəʊɪŋ","adj. 持续的","The investigation is ongoing."],
+["option","ˈɒpʃn","n. 选项；选择","We have several options."],
+["originate","əˈrɪdʒɪneɪt","v. 起源","The custom originated in the north."],
+["outcome","ˈaʊtkʌm","n. 结果","The outcome was unexpected."],
+["overcome","ˌəʊvəˈkʌm","v. 克服","We overcame many difficulties."],
+["overlap","ˌəʊvəˈlæp","v./n. 重叠","Their duties overlap somewhat."],
+["overwhelming","ˌəʊvəˈwelmɪŋ","adj. 压倒性的","There was overwhelming support."],
+["paradox","ˈpærədɒks","n. 悖论","It is a paradox worth exploring."],
+["parameter","pəˈræmɪtə","n. 参数","Set the parameters carefully."],
+["participate","pɑːˈtɪsɪpeɪt","v. 参与","Students participated actively."],
+["particular","pəˈtɪkjələ","adj. 特定的；特别的","In particular, I like the design."],
+["phenomenon","fəˈnɒmɪnən","n. 现象","Global warming is a real phenomenon."],
+["policy","ˈpɒləsi","n. 政策","The government changed its policy."],
+["precise","prɪˈsaɪs","adj. 精确的","Give a precise description."],
+["predict","prɪˈdɪkt","v. 预测","Experts predict economic growth."],
+["predominant","prɪˈdɒmɪnənt","adj. 占主导的","The predominant colour is blue."],
+["preliminary","prɪˈlɪmɪnəri","adj. 初步的","We held a preliminary meeting."],
+["presume","prɪˈzjuːm","v. 假定","I presume you are joking."],
+["prevail","prɪˈveɪl","v. 盛行；获胜","Justice will prevail."],
+["primary","ˈpraɪməri","adj. 主要的；初级的","Our primary goal is safety."],
+["principle","ˈprɪnsəpl","n. 原则","He sticks to his principles."],
+["prioritise","praɪˈɒrətaɪz","v. 优先考虑","We should prioritise education."],
+["probe","prəʊb","v./n. 探查","Scientists probed the cause."],
+["proceed","prəˈsiːd","v. 继续进行","We proceeded with the plan."],
+["process","ˈprəʊses","n. 过程；v. 处理","The application process is simple."],
+["profound","prəˈfaʊnd","adj. 深刻的","The book had a profound impact."],
+["prohibit","prəˈhɪbɪt","v. 禁止","Smoking is prohibited here."],
+["promote","prəˈməʊt","v. 促进；提升","We promote a healthy lifestyle."],
+["propose","prəˈpəʊz","v. 提议；求婚","He proposed a new method."],
+["prospect","ˈprɒspekt","n. 前景；希望","The prospect looks bright."],
+["prosperity","prɒˈsperəti","n. 繁荣","Education brings prosperity."],
+["protocol","ˈprəʊtəkɒl","n. 协议；规程","Follow the safety protocol."],
+["publish","ˈpʌblɪʃ","v. 出版；发布","She published a novel."],
+["pursue","pəˈsjuː","v. 追求；从事","He pursued a career in medicine."],
+["qualify","ˈkwɒlɪfaɪ","v. 使合格；取得资格","She qualified as a doctor."],
+["radical","ˈrædɪkl","adj. 根本的；激进的","The reform is too radical."],
+["random","ˈrændəm","adj. 随机的","Pick a random number."],
+["range","reɪndʒ","n. 范围；v. 变化","Prices range from 10 to 50."],
+["react","riˈækt","v. 反应","How did he react to the news?"],
+["recover","rɪˈkʌvə","v. 恢复","The patient recovered quickly."],
+["reflect","rɪˈflekt","v. 反映；反思","The book reflects his views."],
+["reform","rɪˈfɔːm","v./n. 改革","Education reform is necessary."],
+["regulate","ˈreɡjuleɪt","v. 规范；调节","The market must be regulated."],
+["reinforce","ˌriːɪnˈfɔːs","v. 加强","This reinforces my belief."],
+["reject","rɪˈdʒekt","v. 拒绝","The proposal was rejected."],
+["relax","rɪˈlæks","v. 放松","Listen to music to relax."],
+["release","rɪˈliːs","v. 释放；发布","The film was released last week."],
+["relevant","ˈreləvənt","adj. 相关的","Give relevant examples."],
+["reliable","rɪˈlaɪəbl","adj. 可靠的","He is a reliable friend."],
+["relieve","rɪˈliːv","v. 缓解；解除","The medicine relieved the pain."],
+["reluctant","rɪˈlʌktənt","adj. 不情愿的","She was reluctant to leave."],
+["remarkable","rɪˈmɑːkəbl","adj. 非凡的","He made remarkable progress."],
+["remote","rɪˈməʊt","adj. 偏远的；远程的","They live in a remote village."],
+["remove","rɪˈmuːv","v. 移除","Remove the obstacles."],
+["require","rɪˈkwaɪə","v. 需要","The job requires patience."],
+["research","rɪˈsɜːtʃ","n./v. 研究","Research shows a clear link."],
+["reserve","rɪˈzɜːv","v. 保留；预订","We reserved a table."],
+["resolve","rɪˈzɒlv","v. 解决；决心","They resolved the conflict."],
+["resource","rɪˈsɔːs","n. 资源","Water is a scarce resource."],
+["respond","rɪˈspɒnd","v. 回应","Please respond by Friday."],
+["restore","rɪˈstɔː","v. 恢复；修复","They restored the old building."],
+["restrict","rɪˈstrɪkt","v. 限制","Speed is restricted here."],
+["retain","rɪˈteɪn","v. 保留","We retained the original style."],
+["reveal","rɪˈviːl","v. 揭示；透露","The report revealed the truth."],
+["reverse","rɪˈvɜːs","v. 反转；adj. 相反的","The trend reversed this year."],
+["revise","rɪˈvaɪz","v. 修订；复习","I revised the essay twice."],
+["revolution","ˌrevəˈluːʃn","n. 革命","The IT revolution changed life."],
+["rigid","ˈrɪdʒɪd","adj. 僵硬的；严格的","The rules are too rigid."],
+["role","rəʊl","n. 角色；作用","He played a key role."],
+["scale","skeɪl","n. 规模；v. 缩放","The project is on a large scale."],
+["scarce","skeəs","adj. 稀缺的","Water is scarce in deserts."],
+["scenario","səˈnɑːriəʊ","n. 情景；方案","Consider the worst scenario."],
+["scope","skəʊp","n. 范围","The scope of the work is clear."],
+["secure","sɪˈkjʊə","adj. 安全的；v. 获得","We secured the contract."],
+["seek","siːk","v. 寻求","They seek a better life."],
+["select","sɪˈlekt","v. 选择；adj. 精选的","Select the best option."],
+["significant","sɪɡˈnɪfɪkənt","adj. 重要的；显著的","There was a significant drop."],
+["skeptical","ˈskeptɪkl","adj. 怀疑的","I am skeptical of the claim."],
+["society","səˈsaɪəti","n. 社会","A healthy society values education."],
+["source","sɔːs","n. 来源","Identify the source of the error."],
+["specific","spəˈsɪfɪk","adj. 具体的","Give specific reasons."],
+["stable","ˈsteɪbl","adj. 稳定的","The economy is relatively stable."],
+["statistics","stəˈtɪstɪks","n. 统计；数据","Statistics support the claim."],
+["status","ˈsteɪtəs","n. 地位；状态","What is the status of the project?"],
+["straightforward","ˌstreɪtˈfɔːwəd","adj. 简单的","The task is straightforward."],
+["strategy","ˈstrætədʒi","n. 策略","We need a clear strategy."],
+["stress","stres","n. 压力；v. 强调","Don't stress too much."],
+["structure","ˈstrʌktʃə","n. 结构","The essay lacks structure."],
+["submit","səbˈmɪt","v. 提交；屈服","Submit your essay by Friday."],
+["subsequent","ˈsʌbsɪkwənt","adj. 随后的","Subsequent events proved him right."],
+["substitute","ˈsʌbstɪtjuːt","v./n. 替代","Use oil as a substitute for butter."],
+["sufficient","səˈfɪʃnt","adj. 充足的","We have sufficient evidence."],
+["suggest","səˈdʒest","v. 建议；暗示","I suggest we start now."],
+["summary","ˈsʌməri","n. 摘要","Read the executive summary."],
+["survey","ˈsɜːveɪ","n./v. 调查","A survey was conducted."],
+["survive","səˈvaɪv","v. 幸存","Few plants survive the frost."],
+["sustain","səˈsteɪn","v. 维持；承受","The bridge sustained heavy load."],
+["tackle","ˈtækl","v. 处理；对付","We must tackle poverty."],
+["temporary","ˈtemprəri","adj. 临时的","This is only a temporary fix."],
+["tend","tend","v. 倾向于","People tend to forget."],
+["theory","ˈθɪəri","n. 理论","Einstein's theory changed physics."],
+["throughout","θruːˈaʊt","prep. 遍及；整个","It rained throughout the night."],
+["trace","treɪs","v. 追溯；n. 痕迹","We traced the problem to a bug."],
+["tradition","trəˈdɪʃn","n. 传统","Respect local tradition."],
+["transform","trænsˈfɔːm","v. 转变","The internet transformed life."],
+["transit","ˈtrænzɪt","n. 运输；中转","Public transit is efficient."],
+["transmit","trænzˈmɪt","v. 传输；传播","The signal is transmitted by satellite."],
+["transparent","trænsˈpærənt","adj. 透明的","The process should be transparent."],
+["tremendous","trəˈmendəs","adj. 巨大的","We made tremendous progress."],
+["ultimate","ˈʌltɪmət","adj. 最终的","Our ultimate goal is happiness."],
+["undergo","ˌʌndəˈɡəʊ","v. 经历","The patient underwent surgery."],
+["underlie","ˌʌndəˈlaɪ","v. 构成…的基础","Trust underlies all relations."],
+["undertake","ˌʌndəˈteɪk","v. 承担；着手","We undertook a big project."],
+["uniform","ˈjuːnɪfɔːm","adj. 一致的；n. 制服","Apply a uniform standard."],
+["unique","juˈniːk","adj. 独特的","Every fingerprint is unique."],
+["unite","juˈnaɪt","v. 联合","We must unite against disease."],
+["universal","ˌjuːnɪˈvɜːsl","adj. 普遍的","Music is a universal language."],
+["unveil","ʌnˈveɪl","v. 揭幕；公布","The company unveiled a new product."],
+["utilise","ˈjuːtəlaɪz","v. 利用","We utilise solar power."],
+["valid","ˈvælɪd","adj. 有效的；合理的","Your ticket is still valid."],
+["vanish","ˈvænɪʃ","v. 消失","The fog vanished at noon."],
+["variation","ˌveəriˈeɪʃn","n. 变化；变异","There is little variation."],
+["variety","vəˈraɪəti","n. 多样；种类","A variety of foods is healthy."],
+["various","ˈveəriəs","adj. 各种各样的","We tried various methods."],
+["vehicle","ˈviːəkl","n. 车辆；媒介","The vehicle broke down."],
+["velocity","vəˈlɒsəti","n. 速度","The velocity of light is constant."],
+["venture","ˈventʃə","n. 冒险；v. 敢于","A new business venture."],
+["version","ˈvɜːʃn","n. 版本","The latest version is faster."],
+["viable","ˈvaɪəbl","adj. 可行的","The plan is financially viable."],
+["vigorous","ˈvɪɡərəs","adj. 有力的；活跃的","Take vigorous exercise."],
+["virtual","ˈvɜːtʃuəl","adj. 虚拟的","We had a virtual meeting."],
+["visible","ˈvɪzəbl","adj. 可见的","The stars are visible at night."],
+["vision","ˈvɪʒn","n. 视野；愿景","He has a clear vision."],
+["vital","ˈvaɪtl","adj. 至关重要的","Sleep is vital to health."],
+["volume","ˈvɒljuːm","n. 量；体积","The volume of trade grew."],
+["voluntary","ˈvɒləntri","adj. 自愿的","It was a voluntary act."],
+["vulnerable","ˈvʌlnərəbl","adj. 脆弱的","Children are vulnerable."],
+["whereas","ˌweərˈæz","conj. 然而","He is rich, whereas I am poor."],
+["whereby","weəˈbaɪ","adv. 凭此","A system whereby we vote online."],
+["widespread","ˈwaɪdspred","adj. 广泛的","There is widespread support."],
+["withdraw","wɪðˈdrɔː","v. 撤回；取钱","He withdrew his complaint."],
+["witness","ˈwɪtnəs","v. 目睹；n. 目击者","We witnessed a historic moment."],
+["yield","jiːld","v. 产生；屈服","The investment yielded profit."],
+];
+
+const INTERVALS = [1, 2, 4, 7, 15, 30];
+let wordQueue = [];
+let wordIdx = 0;
+
+function wordState() {
+  if (data.words.today.date !== todayStr()) data.words.today = { date: todayStr(), new: 0, rev: 0 };
+  return data.words;
+}
+// 单词总库 = 原核心词(WORDS) + 雅思词库(IELTS_LIB) 去重合并；背单词板块因此包含全部雅思词
+let ALL_WORDS = null, LIB_BY_WORD = null;
+// ★ vocablib.js 懒加载：仅在进入背单词/搜索时才请求 3.5MB 词库，首屏不再阻塞
+let _vocabPromise = null;
+function ensureVocabLib() {
+  if (_vocabPromise) return _vocabPromise;
+  _vocabPromise = new Promise(function (res) {
+    const sc = document.createElement('script');
+    sc.src = 'vocablib.js';
+    sc.onload = function () { ALL_WORDS = null; LIB_BY_WORD = null; res(true); };
+    sc.onerror = function () { res(false); };
+    document.head.appendChild(sc);
+  });
+  return _vocabPromise;
+}
+function speakText(t, lang) { try { const u = new SpeechSynthesisUtterance(t || ''); u.lang = lang || 'en-US'; u.rate = .95; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); } catch (e) {} }
+function getAllWords() {
+  if (ALL_WORDS) return ALL_WORDS;
+  const seen = new Set(), list = [];
+  for (const w of WORDS) { seen.add(w[0].toLowerCase()); list.push(w); }
+  if (window.IELTS_LIB) for (const e of window.IELTS_LIB) {
+    const k = (e.word || '').toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    list.push([e.word, (e.phonetic || '').replace(/^\/|\/$/g, ''), e.def || '', e.sentence_en || '']);
+  }
+  ALL_WORDS = list;
+  LIB_BY_WORD = {};
+  if (window.IELTS_LIB) for (const e of window.IELTS_LIB) LIB_BY_WORD[(e.word || '').toLowerCase()] = e;
+  return ALL_WORDS;
+}
+function buildWordQueue() {
+  const ws = wordState();
+  const today = todayStr();
+  const bank = getAllWords();
+  const due = bank.filter(w => ws.prog[w[0]] && ws.prog[w[0]].due <= today);
+  const newRemain = Math.max(0, ws.target - ws.today.new);
+  const fresh = bank.filter(w => !ws.prog[w[0]]).slice(0, newRemain);
+  return [...due, ...fresh];
+}
+function renderWordStats() {
+  const ws = wordState();
+  const learned = Object.keys(ws.prog).length;
+  const today = todayStr();
+  const bank = getAllWords();
+  const dueCnt = bank.filter(w => ws.prog[w[0]] && ws.prog[w[0]].due <= today).length;
+  $('wordStats').innerHTML =
+    '<span>词库 <b>' + bank.length + '</b></span><span>已学 <b>' + learned + '</b></span>' +
+    '<span>今日新学 <b>' + ws.today.new + '</b></span><span>待复习 <b>' + dueCnt + '</b></span>';
+  $('wordTarget').value = ws.target;
+  const pct = Math.min(100, Math.round(learned / bank.length * 100));
+  $('wordBar').style.width = pct + '%';
+  $('wordTip').textContent = '词库总进度 ' + pct + '%';
+  updateHero();
+}
+$('wordTarget').addEventListener('change', e => {
+  data.words.target = Math.min(50, Math.max(5, +e.target.value || 15));
+  save(); startWordSession();
+});
+$('wordSpeak').addEventListener('click', () => speakText($('wordText').textContent, 'en-US'));
+
+function startWordSession() {
+  // 词库未加载则后台懒加载，加载完成后自动重渲染（首屏更快，词库进入即用到）
+  if (!window.IELTS_LIB) {
+    ensureVocabLib().then(function (ok) {
+      if (ok && $('view-words').classList.contains('active')) startWordSession();
+    });
+  }
+  wordQueue = buildWordQueue();
+  wordIdx = 0;
+  renderWordStats();
+  if (!wordQueue.length) {
+    $('wordCard').style.display = 'none';
+    $('wordDone').style.display = 'block';
+    $('wordDoneText').textContent = Object.keys(data.words.prog).length >= getAllWords().length
+      ? '词库已全部学完，明天有复习记得来！' : '今日任务全部完成，明天继续！';
+    return;
+  }
+  $('wordCard').style.display = 'block';
+  $('wordDone').style.display = 'none';
+  showWord();
+}
+function showWord() {
+  const w = wordQueue[wordIdx];
+  $('wordText').textContent = w[0];
+  $('wordPhonetic').textContent = '/' + w[1] + '/';
+  $('wordMeaning').textContent = w[2];
+  $('wordMeaning').classList.remove('show');
+  $('wordExample').textContent = '';
+  $('wordAids').innerHTML = '';
+  $('wordBtns').innerHTML = '<button class="reveal" id="revealBtn">显示释义</button>';
+  $('revealBtn').onclick = () => {
+    $('wordMeaning').classList.add('show');
+    let html = '例句：' + w[3];
+    const e = LIB_BY_WORD && LIB_BY_WORD[w[0].toLowerCase()];
+    if (e) {
+      if (e.aids && e.aids.mnemonic) html += '<div class="wa-block"><span class="wa-label">💡 助记</span>' + escHtml(e.aids.mnemonic) + '</div>';
+      if (Array.isArray(e.collocations) && e.collocations.length) {
+        html += '<div class="wa-block"><span class="wa-label">🔗 搭配</span>' +
+          e.collocations.slice(0, 4).map(c => '<span class="wa-pill">' + escHtml(c.en) + '</span>').join('') + '</div>';
+      }
+    }
+    $('wordExample').innerHTML = html;
+    $('wordBtns').innerHTML =
+      '<button class="q-hard" data-q="hard">不认识</button>' +
+      '<button class="q-vague" data-q="vague">模糊</button>' +
+      '<button class="q-easy" data-q="easy">认识</button>';
+    $('wordBtns').querySelectorAll('button').forEach(b => b.onclick = () => gradeWord(b.dataset.q));
+  };
+}
+function gradeWord(q) {
+  const ws = wordState();
+  const w = wordQueue[wordIdx];
+  const key = w[0];
+  const isNew = !ws.prog[key];
+  let level = isNew ? 0 : ws.prog[key].level;
+
+  if (q === 'easy') level = Math.min(level + 1, INTERVALS.length - 1);
+  else if (q === 'vague') level = Math.max(level, 0);
+  else level = 0;
+
+  const days = q === 'hard' ? 0 : INTERVALS[level];
+  const due = new Date();
+  due.setDate(due.getDate() + days);
+  ws.prog[key] = { level, due: due.toISOString().slice(0, 10) };
+
+  if (isNew) ws.today.new++; else ws.today.rev++;
+  if (q === 'hard') wordQueue.push(w);   // 不认识的词本次再见一次
+
+  save();
+  wordIdx++;
+  renderWordStats();
+  if (wordIdx >= wordQueue.length) {
+    $('wordCard').style.display = 'none';
+    $('wordDone').style.display = 'block';
+    $('wordDoneText').textContent = `本次完成：新学 ${ws.today.new} 词，复习 ${ws.today.rev} 词，干得漂亮！`;
+  } else showWord();
+}
+
+/* ============================================================
+   健身任务 · 本周训练计划
+   kind: strength=力量日 speed=速度日 recover=恢复日 rest=休息日
+   ============================================================ */
+const RECOVERY_TIPS = [
+  ['泡沫轴按摩', '针对训练日练过的部位缓慢滚动，酸痛点多停留，等待张力释放'],
+  ['动态拉伸', '用训练前那套动态拉伸流程，不紧不慢做充分，防止僵硬累积'],
+  ['低强度活动', '快走、慢跑、慢速骑行均可，强度以能轻松聊天为准'],
+  ['饮食策略', '恢复日可略减碳水，维持足量蛋白质与蔬菜摄入'],
+  ['早点睡觉', '多睡一小时，比任何恢复手段都更管用'],
+  ['冥想', '安静处闭眼专注呼吸，帮助神经系统平稳下来']
+];
+const WARMUP_TIP = '训练前必做：动态拉伸流程（手腕活动 / 猫牛式 / 半跪姿转体 / 坐姿内收肌伸展 / 90-90 髋部伸展 / 90-90 转体 / 仰卧后侧链伸展 / 沙发前侧伸展），约 10 分钟，每个动作最大幅度保持 2-3 秒。';
+const PLAN = [
+  { day: '周一', kind: 'strength', type: '力量日 ①', title: '下肢与上肢基础力量',
+    goal: '前半段用复合动作建立基础力量、打磨动作模式；后半段用稳定性和局部力量训练补上关键短板，重视损伤预防。',
+    ex: [
+      ['杠铃深蹲', '每组 1-5 次 × 4-5 组 · 间歇 2-3 分钟 · 中等偏重，动作质量为底线'],
+      ['杠铃实力推 或 卧推', '每组 3-5 次 × 4 组 · 间歇 2 分钟 · 中等重量'],
+      ['罗马尼亚硬拉', '每组 8-10 次 × 3-4 组 · 间歇 1-2 分钟 · 强调离心控制'],
+      ['单臂平板直升 或 平板哑铃划船', '两边交替共 10 次 × 3 组 · 间歇 1 分钟 · 每次保持 2 秒核心控制'],
+      ['水平引体（反向划船）', '每组 8-10 次 × 3 组 · 间歇 1-1.5 分钟 · 自重'],
+      ['单腿硬拉', '每边 6-10 次 × 3 组 · 间歇 1 分钟 · 轻重量，动作标准为主']
+    ] },
+  { day: '周二', kind: 'speed', type: '速度日 ①', title: '垂直爆发力与核心稳定',
+    goal: '前半段用爆发力动作发展速度力量与神经肌肉协调性；后半段用核心训练提升加速中的身体控制能力。',
+    ex: [
+      ['杠铃高翻 或 负重蹲跳', '高翻每组 1-5 次 × 4 组；蹲跳每组 5 次 × 4 组 · 间歇 2 分钟 · 速度优先'],
+      ['击掌俯卧撑', '每组 5-6 次 × 4 组 · 间歇 1.5 分钟 · 自重，落地缓冲控制'],
+      ['壶铃摆荡', '每组 12 次 × 4 组 · 间歇 1.5 分钟 · 臀部主导发力，避免腰部代偿'],
+      ['侧平板支撑', '每边 30 秒 × 3 组 · 间歇 1 分钟 · 新手静态，有基础可弹力圈动态'],
+      ['静态死虫式', '每组 15-30 秒 × 3 组 · 间歇 1 分钟 · 腰部始终平贴地板'],
+      ['静态保加利亚蹲', '每边 15-20 秒 × 3 组 · 间歇 1-1.5 分钟 · 轻重量，核心收紧']
+    ] },
+  { day: '周三', kind: 'recover', type: '恢复日', title: '动态拉伸',
+    goal: '用训练前那套动态拉伸流程，不紧不慢做充分，防止僵硬累积。每个动作最大幅度保持 2-3 秒，全程约 10 分钟。',
+    ex: [
+      ['手腕活动', '双手交叉绕环 + 手腕屈伸各 8-10 次 · 激活前臂与腕关节'],
+      ['猫牛式', '脊柱逐节起伏 × 10 次 · 配合呼吸，吸气弓背、呼气塌腰'],
+      ['半跪姿转体', '每侧 8 次 · 一手扶后脑，转体时眼睛跟随肘部方向'],
+      ['坐姿内收肌伸展', '双脚并拢脚心相对，膝盖下压 × 30 秒/侧 · 髋内收肌群'],
+      ['90-90 髋部伸展', '每侧 30 秒 · 前腿髋屈肌拉伸，后腿臀大肌拉伸'],
+      ['90-90 转体', '每侧 8 次 · 在 90-90 基础上向旋转侧打开胸椎'],
+      ['仰卧后侧链伸展', '双腿伸直上举后缓慢放回 × 8 次 · 腘绳肌+下背'],
+      ['沙发前侧伸展', '单膝跪地另一腿向前蹬伸 × 30 秒/侧 · 髋屈肌+股四头']
+    ] },
+  { day: '周四', kind: 'strength', type: '力量日 ②', title: '后侧链与上肢拉力',
+    goal: '与力量日①互补，前半段复合动作建立基础力量，后半段稳定性与局部力量训练，让身体发展更全面。',
+    ex: [
+      ['杠铃硬拉', '每组 3-5 次 × 4 组 · 间歇 2-3 分钟 · 中等偏重，侧重动作模式'],
+      ['引体向上', '每组 5 次 × 4 组 · 间歇 2 分钟 · 自重或轻负重，下颌过杠'],
+      ['杠铃前蹲', '每组 4-6 次 × 3-4 组 · 间歇 1.5-2 分钟 · 保持躯干直立、腰椎中立'],
+      ['哑铃交替卧推', '两边交替共 10 次 × 3 组 · 间歇 1-1.5 分钟 · 一侧稳定一侧推起'],
+      ['哑铃高脚杯侧弓步蹲', '两边交替共 12-16 次 × 3 组 · 间歇 1-1.5 分钟 · 稳定控制为主'],
+      ['弹力带站姿抗旋', '每边 30 秒 × 3 组 · 间歇 1 分钟 · 躯干中正不被带偏']
+    ] },
+  { day: '周五', kind: 'speed', type: '速度日 ②', title: '侧向爆发力与敏捷反应',
+    goal: '发展速度力量和神经肌肉协调性，加入更多侧向移动和敏捷训练，在"快"的方向上覆盖更完整。',
+    ex: [
+      ['跳箱 或 杠铃悬垂高翻', '跳箱每组 5 次 × 4 组；高翻每组 1-5 次 × 4 组 · 间歇 2 分钟'],
+      ['单脚连续侧向跳', '每边 10 次来回 × 4 组 · 间歇 1.5 分钟 · 触地快速弹起'],
+      ['半蹲前前后后快速移动', '每组 10-15 秒 × 4 组 · 间歇 1 分钟 · 保持节奏再提高频率'],
+      ['哥本哈根支撑', '每边 20-30 秒 × 3 组 · 间歇 1 分钟 · 身体成一条直线'],
+      ['单侧负重交替弓步蹲起', '每组 10-12 次 · 左右手负重各 2 组 · 间歇 1-1.5 分钟'],
+      ['农夫行走 或 半蹲侧向移动', '农夫行走 20 米来回 × 3 组；侧移 15 步来回 × 3 组 · 间歇 1-1.5 分钟']
+    ] },
+  { day: '周六', kind: 'recover', type: '恢复日', title: '动态拉伸',
+    goal: '同周三：动态拉伸流程，不紧不慢做充分。每个动作最大幅度保持 2-3 秒，全程约 10 分钟。',
+    ex: [
+      ['手腕活动', '双手交叉绕环 + 手腕屈伸各 8-10 次 · 激活前臂与腕关节'],
+      ['猫牛式', '脊柱逐节起伏 × 10 次 · 配合呼吸，吸气弓背、呼气塌腰'],
+      ['半跪姿转体', '每侧 8 次 · 一手扶后脑，转体时眼睛跟随肘部方向'],
+      ['坐姿内收肌伸展', '双脚并拢脚心相对，膝盖下压 × 30 秒/侧 · 髋内收肌群'],
+      ['90-90 髋部伸展', '每侧 30 秒 · 前腿髋屈肌拉伸，后腿臀大肌拉伸'],
+      ['90-90 转体', '每侧 8 次 · 在 90-90 基础上向旋转侧打开胸椎'],
+      ['仰卧后侧链伸展', '双腿伸直上举后缓慢放回 × 8 次 · 腘绳肌+下背'],
+      ['沙发前侧伸展', '单膝跪地另一腿向前蹬伸 × 30 秒/侧 · 髋屈肌+股四头']
+    ] },
+  { day: '周日', kind: 'rest', type: '休息日', title: '完全休息',
+    goal: '不去健身房，什么也不做，彻底放松身心，为下一周储备能量。',
+    rest: true }
+];
+
+let planDayIdx = (new Date().getDay() + 6) % 7;   // 默认选中今天（周一=0 … 周日=6）
+
+function renderPlan() {
+  const pills = $('dayPills');
+  pills.innerHTML = '';
+  PLAN.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.className = 'day-pill' + (i === planDayIdx ? ' active' : '') + (i === (new Date().getDay() + 6) % 7 ? ' today' : '');
+    b.textContent = p.day;
+    b.onclick = () => { planDayIdx = i; renderPlan(); };
+    pills.appendChild(b);
+  });
+
+  const p = PLAN[planDayIdx];
+  const box = $('planDetail');
+  let html = `<div class="plan-head">
+      <span class="plan-badge ${p.kind}">${p.type}</span>
+      <span class="plan-title">${p.title}</span>
+    </div>
+    <div class="plan-goal">${p.goal}</div>`;
+
+  if (p.ex) {
+    html += `<div class="plan-tip">🤸 ${WARMUP_TIP}</div><ul class="ex-list">`;
+    p.ex.forEach((e, i) => {
+      html += `<li class="ex-row">
+        <span class="ex-num">${i + 1}</span>
+        <div class="ex-body"><div class="ex-name">${e[0]}</div>
+        <div class="ex-detail">${e[1]}</div></div></li>`;
+    });
+    html += '</ul>';
+  } else if (p.recovery) {
+    html += '<ul class="ex-list">';
+    RECOVERY_TIPS.forEach((t, i) => {
+      html += `<li class="ex-row">
+        <span class="ex-num">${i + 1}</span>
+        <div class="ex-body"><div class="ex-name">${t[0]}</div>
+        <div class="ex-detail">${t[1]}</div></div></li>`;
+    });
+    html += '</ul>';
+  } else {
+    html += '<div class="fit-empty">😌 今天彻底休息，好好吃饭好好睡觉</div>';
+  }
+  box.innerHTML = html;
+}
+
+/* ============================================================
+   健身任务：每日打卡 + 每周维度
+   ============================================================ */
+let fitCalYm = null;   // 当前查看的月份，格式 'YYYY-MM'
+function renderFitCalendar() {
+  const f = data.fitness;
+  const set = new Set(f.checkins);
+  const [y, m] = fitCalYm.split('-').map(Number);
+  const first = new Date(y, m - 1, 1);
+  const startWd = (first.getDay() + 6) % 7;            // 周一为首列
+  const days = new Date(y, m, 0).getDate();
+  const wds = ['一', '二', '三', '四', '五', '六', '日'];
+  let html = wds.map(w => `<div class="wd">${w}</div>`).join('');
+  for (let i = 0; i < startWd; i++) html += '<div class="fit-cell muted"></div>';
+  let monthCount = 0;
+  for (let d = 1; d <= days; d++) {
+    const ds = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const on = set.has(ds);
+    const isToday = ds === todayStr();
+    if (on) monthCount++;
+    const cls = 'fit-cell' + (on ? ' on' : '') + (isToday ? ' today' : '');
+    html += `<div class="${cls}">${d}</div>`;
+  }
+  $('fitCalGrid').innerHTML = html;
+  $('fitCalMonth').textContent = `${y}年${m}月`;
+  $('fitCalCount').textContent = monthCount;
+  $('fitTotal').textContent = f.checkins.length;
+}
+$('fitCalPrev').onclick = () => { const [y, m] = fitCalYm.split('-').map(Number); const p = new Date(y, m - 2, 1); fitCalYm = p.getFullYear() + '-' + String(p.getMonth() + 1).padStart(2, '0'); renderFitCalendar(); };
+$('fitCalNext').onclick = () => { const [y, m] = fitCalYm.split('-').map(Number); const n = new Date(y, m, 1); fitCalYm = n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0'); renderFitCalendar(); };
+function renderFitness() {
+  const f = data.fitness;
+  const today = todayStr();
+
+  // 打卡按钮 + 今日训练类型徽章
+  const todayPlan = PLAN[(new Date().getDay() + 6) % 7];
+  $('fitTodayBadge').textContent = `今日：${todayPlan.type}`;
+  const checked = f.checkins.includes(today);
+  const btn = $('fitCheckBtn');
+  btn.textContent = checked ? '今日已打卡 ✓' : '打卡今日训练';
+  btn.disabled = checked;
+  btn.style.opacity = checked ? 0.55 : 1;
+
+  // 连续天数
+  let streak = 0;
+  const set = new Set(f.checkins);
+  let d = new Date();
+  if (!set.has(todayStr())) d.setDate(d.getDate() - 1);
+  while (set.has(d.toISOString().slice(0, 10))) { streak++; d.setDate(d.getDate() - 1); }
+  $('fitStreak').textContent = streak;
+
+  // 按月日历显示打卡（默认显示当月，可翻月）
+  if (!fitCalYm) { const n = new Date(); fitCalYm = n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0'); }
+  renderFitCalendar();
+
+  // 周一提醒
+  $('fitMonday').classList.toggle('show', new Date().getDay() === 1);
+
+  // 维度历史
+  const wrap = $('fitHistoryWrap');
+  if (!f.measures.length) {
+    wrap.innerHTML = '<div class="fit-empty">还没有记录，录入第一条维度数据吧</div>';
+  } else {
+    const rows = f.measures.slice(-6).reverse();
+    let html = `<table class="fit-history"><tr>
+      <th>日期</th><th>体重</th><th>胸围</th><th>腰围</th><th>臀围</th><th>臂围</th><th>腿围</th></tr>`;
+    rows.forEach((m, i) => {
+      let delta = '';
+      const prev = rows[i + 1];
+      if (prev && m.weight && prev.weight) {
+        const diff = (m.weight - prev.weight).toFixed(1);
+        if (diff > 0) delta = ` <span class="delta-up">▲${diff}</span>`;
+        else if (diff < 0) delta = ` <span class="delta-down">▼${Math.abs(diff)}</span>`;
+      }
+      html += `<tr><td>${m.date.slice(5)}</td><td>${m.weight || '—'}${delta}</td>
+        <td>${m.chest || '—'}</td><td>${m.waist || '—'}</td>
+        <td>${m.hip || '—'}</td><td>${m.arm || '—'}</td><td>${m.thigh || '—'}</td></tr>`;
+    });
+    wrap.innerHTML = html + '</table>';
+  }
+
+  renderPlan();
+  updateHero();
+}
+$('fitCheckBtn').onclick = () => {
+  const today = todayStr();
+  if (!data.fitness.checkins.includes(today)) {
+    data.fitness.checkins.push(today);
+    fitCalYm = null;   // 打卡后跳回当月，立即看到今天的打卡
+    save(); renderFitness();
+    showToast('💪 打卡成功，继续保持！');
+  }
+};
+$('fitSaveBtn').onclick = () => {
+  const rec = { date: todayStr() };
+  let hasValue = false;
+  $('fitForm').querySelectorAll('input').forEach(inp => {
+    const v = parseFloat(inp.value);
+    rec[inp.dataset.k] = isNaN(v) ? null : v;
+    if (!isNaN(v)) hasValue = true;
+  });
+  if (!hasValue) { showToast('请先填写至少一项数据'); return; }
+  data.fitness.measures = data.fitness.measures.filter(m => m.date !== rec.date);
+  data.fitness.measures.push(rec);
+  save(); renderFitness();
+  showToast('📏 维度已记录');
+};
+
+/* ============================================================
+   练口语 · 雅思口语智能陪练（本地规则引擎，无需联网）
+   ============================================================ */
+const SPEAK_TOPICS = [
+  { part: 1, q: "Let's talk about your hometown. Where is it, and what do you like most about it?", tip: "用 3–4 句：位置 + 特点 + 个人感受。" },
+  { part: 1, q: "Do you prefer reading books or watching movies? Why?", tip: "明确选择 + 1 个理由 + 例子。" },
+  { part: 1, q: "How do you usually spend your weekends?", tip: "描述习惯 + 偶尔的变化。" },
+  { part: 1, q: "What kind of music do you enjoy, and when do you listen to it?", tip: "类型 + 场景。" },
+  { part: 1, q: "Describe a hobby you have had for a long time.", tip: "爱好 + 起点 + 收获。" },
+  { part: 2, q: "Describe a person who has influenced you. You should say who they are, how you know them, and why they influenced you.", tip: "Part 2 需讲约 2 分钟：用 First / Then / Finally 串起要点。" },
+  { part: 2, q: "Describe a place you would like to visit again. You should say where it is, when you went, and what made it special.", tip: "地点 + 经历 + 感受，注意时态。" },
+  { part: 2, q: "Describe a skill you want to learn in the future.", tip: "技能 + 原因 + 计划。" },
+  { part: 3, q: "Some people think technology makes people less sociable. What's your opinion?", tip: "Part 3 要辩证：先承认一面，再转折，给结论。" },
+  { part: 3, q: "How can governments encourage people to live a healthier life?", tip: "给出 2 个具体政策 + 预期效果。" },
+  { part: 3, q: "Do you think children should learn a foreign language at a young age? Why or why not?", tip: "立场 + 2 个理由。" },
+  { part: 1, q: "What's your favourite season, and what do people usually do in that season?", tip: "季节 + 活动 + 原因。" },
+  { part: 2, q: "Describe a memorable trip you took with your friends.", tip: "时间 + 地点 + 趣事 + 感受。" },
+  { part: 3, q: "Why do some people prefer to work from home rather than in an office?", tip: "比较双方利弊，给出平衡观点。" }
+];
+const SPEAK_FOLLOWUPS = [
+  "Can you give a more specific example?",
+  "Why do you think that is the case?",
+  "How does this compare with your childhood experience?",
+  "Do you think this will change in the future? Why?",
+  "What are the advantages and disadvantages of this?",
+  "Would you recommend this to a friend? Why?"
+];
+function speakAdd(who, text, meta) {
+  const box = $('speakBox');
+  const msg = document.createElement('div');
+  msg.className = 'speak-msg ' + who;
+  const b = document.createElement('div');
+  b.className = 'speak-bubble';
+  b.textContent = text;
+  msg.appendChild(b);
+  if (meta) {
+    const m = document.createElement('div');
+    m.className = 'speak-meta';
+    m.innerHTML = meta;
+  }
+  box.appendChild(msg);
+  box.scrollTop = box.scrollHeight;
+}
+function speakPickTopic() {
+  const t = SPEAK_TOPICS[Math.floor(Math.random() * SPEAK_TOPICS.length)];
+  $('speakBox').innerHTML = '';
+  speakAdd('bot', '🎯 ' + t.q, '<span>题型 Part ' + t.part + ' · ' + t.tip + '</span>');
+  speakText(t.q, 'en-US');
+  setSpeakStatus('点击麦克风，用英语回答');
+}
+function speakScore(text) {
+  const words = (text.trim().match(/\S+/g) || []).length;
+  const sentences = (text.trim().match(/[.!?。！？]+/g) || []).length || 1;
+  const uniq = new Set(text.toLowerCase().match(/[a-z']+/g) || []).size;
+  const variety = words ? Math.min(1, uniq / words * 2.2) : 0;
+  let s = words * 1.2 + sentences * 6 + variety * 40;
+  s = Math.max(0, Math.min(100, Math.round(s)));
+  return { score: s, words, sentences, variety: Math.round(variety * 100) };
+}
+/* 纯语音陪练：麦克风识别 + 语音朗读反馈 */
+let speakLang = 'en-US', speakRecog = null, speakListening = false;
+function speakSupportedRecog() { return !!(window.SpeechRecognition || window.webkitSpeechRecognition); }
+function setSpeakStatus(t) { const el = $('speakStatus'); if (el) el.textContent = t; }
+function ensureRecog() {
+  if (speakRecog) return speakRecog;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  const r = new SR();
+  r.lang = speakLang; r.interimResults = false; r.continuous = false; r.maxAlternatives = 1;
+  r.onresult = e => {
+    const res = e.results && e.results[0] && e.results[0][0];
+    const text = (res ? res.transcript : '').trim();
+    stopListen();
+    if (text) examReply(text);
+  };
+  r.onerror = e => { setSpeakStatus('识别出错：' + (e.error || '未知') + '，请重试'); stopListen(); };
+  r.onend = () => { if (speakListening) stopListen(); };
+  speakRecog = r;
+  return r;
+}
+function startListen() {
+  const r = ensureRecog();
+  if (!r) { setSpeakStatus('当前浏览器不支持语音识别，请用 Chrome / Edge 打开本页'); return; }
+  r.lang = speakLang;
+  try { r.start(); speakListening = true; $('micBtn').classList.add('on'); setSpeakStatus('🎙️ 聆听中…说完自动提交'); }
+  catch (e) { setSpeakStatus('无法启动麦克风，请检查浏览器权限'); }
+}
+function stopListen() {
+  speakListening = false;
+  const mb = $('micBtn'); if (mb) mb.classList.remove('on');
+  if (speakRecog) { try { speakRecog.stop(); } catch (e) {} }
+  setSpeakStatus('点击麦克风，用英语回答');
+}
+function examReply(text) {
+  speakAdd('me', text);
+  const r = speakScore(text);
+  let level = 'low', label = '需加强';
+  if (r.score >= 70) { level = 'good'; label = '表现优秀'; }
+  else if (r.score >= 45) { level = 'mid'; label = '尚可提升'; }
+  const fb = [
+    '📊 自动评估：词数 ' + r.words + ' · 句子 ' + r.sentences + ' · 词汇丰富度 ' + r.variety + '%',
+    '✅ 优点：' + (r.words >= 40 ? '内容充实、有细节；' : '已开口表达，值得肯定。') + (r.sentences >= 3 ? '句式有层次；' : '') + (r.variety >= 45 ? '用词较丰富。' : ''),
+    '💡 提升建议：' + (r.words < 40 ? '再补充 1–2 句具体例子或原因；' : '') + (r.sentences < 3 ? '多用连接词(First/However/Because)拆分长句；' : '') + (r.variety < 45 ? '替换重复词，尝试同义表达；' : '') + '注意时态与单复数。'
+  ].join('\n');
+  const meta = '评估 <span class="speak-score ' + level + '">' + r.score + ' 分 · ' + label + '</span>';
+  setTimeout(() => {
+    speakAdd('bot', fb, meta);
+    speakText('Your answer scored ' + r.score + '. ' + (r.score >= 70 ? 'Excellent, very confident.' : 'Good try, try adding more details next time.'), 'en-US');
+    const fu = SPEAK_FOLLOWUPS[Math.floor(Math.random() * SPEAK_FOLLOWUPS.length)];
+    setTimeout(() => {
+      speakAdd('bot', '🔄 追问：' + fu);
+      speakText(fu, 'en-US');
+      setSpeakStatus('点击麦克风，继续回答追问');
+    }, 800);
+  }, 250);
+}
+function buildSpeakVocab() {
+  const box = $('speakVocab');
+  if (!box || box.dataset.built) return;
+  let list = [];
+  if (window.IELTS_LIB) {
+    const re = /(speak|talk|communicat|express|discuss|describ|opinion|argu|persuad|convinc|convey|explain|present|negotiat|interact|conversation|dialogue|articul|listen|respond|debate|viewpoint|fluent|social|relationship|emphas|illustrat|summaris|summariz|clarif|remark|comment|claim|suggest|propose|recommend|compare|contrast|attitude|belief|view)/i;
+    list = window.IELTS_LIB.filter(e => re.test(e.word + ' ' + (e.def || '')));
+  }
+  list = list.slice(0, 24);
+  if (!list.length) { box.innerHTML = '<span class="sv-title">💬 词伙宝盒</span><div class="sv-pills"><span class="sv-pill muted">暂无词库</span></div>'; box.dataset.built = '1'; return; }
+  box.innerHTML = '<span class="sv-title">💬 词伙宝盒（沟通高频词）</span><div class="sv-pills">' +
+    list.map(e => '<span class="sv-pill" data-w="' + escHtml(e.word) + '" title="' + escHtml(e.def || '') + '">' + escHtml(e.word) + '</span>').join('') +
+    '</div>';
+  box.dataset.built = '1';
+  box.querySelectorAll('.sv-pill').forEach(p => p.addEventListener('click', () => speakText(p.dataset.w, 'en-US')));
+}
+$('micBtn').onclick = () => { if (speakListening) stopListen(); else startListen(); };
+document.querySelectorAll('.speak-lang .chipf').forEach(c => c.addEventListener('click', () => {
+  document.querySelectorAll('.speak-lang .chipf').forEach(x => x.classList.remove('active'));
+  c.classList.add('active');
+  speakLang = c.dataset.lang;
+  setSpeakStatus('识别语言已切换：' + (speakLang === 'en-US' ? 'English' : '中文'));
+}));
+$('speakNewTopic').onclick = speakPickTopic;
+function openSpeak() {
+  // 词伙宝盒依赖雅思词库：未加载则懒加载后重建（首屏不阻塞）
+  if (!window.IELTS_LIB) {
+    ensureVocabLib().then(function (ok) {
+      if (ok && $('view-speak').classList.contains('active')) { const b = $('speakVocab'); if (b) b.dataset.built = ''; buildSpeakVocab(); }
+    });
+  }
+  buildSpeakVocab();
+  if (!$('speakBox').children.length) speakPickTopic();
+}
+
+/* ============================================================
+   资讯抓取（科技 / 金融 / 游戏，每日按热度排名）
+   稳定策略（v22 改版）：
+   1) 【主通道】Dev.to 公开 API —— 浏览器原生支持 CORS（Access-Control-Allow-Origin:*），
+      无需任何代理、秒级返回、自带封面图，彻底摆脱"公共代理串行超时卡加载"的问题。
+      四个栏目映射到 Dev.to 标签：technology / artificialintelligence / investing / gamedev
+   2) 【兜底】若 Dev.to 偶发限流/不可达，再降级到原 RSS 代理链（Worker → rss2json → 公共代理）
+   3) 进页面先秒显本地缓存，再后台静默刷新；启动即在后台预抓取，点进去无需等待
+   想换信息源：改 FEEDS 里对应栏目 feeds 的 rss（走下方代理链：自有 Worker → rss2json → 公共代理）
+   v23 改动：① 英文标题经「Google 翻译(主)+MyMemory(兜底)」翻译成中文，已中文则跳过省额度；
+            ② 改为无限滚动、不限条数，浏览到底自动续抓下一页（IntersectionObserver 哨兵）
+   ============================================================ */
+const PER_PAGE = 14;
+const NEWS_SOURCE_VERSION = 3; // 源地址或解析策略变更时递增，自动淘汰旧缓存（v3：改为自建聚合器 news.js）
+// 聚合资讯地址（方案C）：GitHub Actions 每 2 小时生成 news.js，经 jsDelivr CDN 读取
+const NEWS_DATA_URL = 'https://cdn.jsdelivr.net/gh/brilliantz111/Autoria@main/news.js';
+const FEEDS = {
+  // 科技资讯：优先使用各站可验证的直连 RSS；机器之心无公开免鉴权官方源，使用稳定的公众号镜像订阅。
+  tech: { name: '🔬 科技资讯', emoji: '🔬', feeds: [
+    { name: 'RadarAI',  rss: 'https://radarai.top/feed' },
+    { name: '机器之心', rss: 'https://decemberpei.cyou/rssbox/wechat-jiqizhixin.xml' },
+    { name: '新智元',   rss: 'https://www.aiera.com.cn/feed' }
+  ]},
+  // 金融资讯：雪球网 + 东方财富 + 新浪财经（外加 华尔街见闻 兜底）
+  finance: { name: '💰 金融资讯', emoji: '💰', feeds: [
+    { name: '雪球网',   rss: 'https://rsshub.app/xueqiu' },
+    { name: '东方财富', rss: 'https://rsshub.app/eastmoney/news' },
+    { name: '新浪财经', rss: 'https://rsshub.app/sina/finance' },
+    { name: '华尔街见闻', rss: 'https://rsshub.app/wallstreetcn/news' }
+  ]},
+  // 游戏资讯：小黑盒（外加 Steam 官方源兜底）
+  game: { name: '🎮 游戏资讯', emoji: '🎮', feeds: [
+    { name: '小黑盒',   rss: 'https://rsshub.app/xiaoheihe' },
+    { name: 'Steam',   rss: 'https://store.steampowered.com/feeds/news/' }
+  ]}
+};
+// 源站防盗链导致真图加载失败时，用这张占位图兜底，保证每条右侧都有视觉块
+function newsPlaceholder(emoji) {
+  const svg = "<svg xmlns='http://www.w3.org/2000/svg' width='136' height='136'>" +
+    "<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>" +
+    "<stop offset='0' stop-color='#6366f1'/><stop offset='1' stop-color='#8b5cf6'/>" +
+    "</linearGradient></defs><rect width='136' height='136' rx='24' fill='url(#g)'/>" +
+    "<text x='50%' y='56%' font-size='56' text-anchor='middle' dominant-baseline='middle'>" + emoji + "</text>" +
+    "</svg>";
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+// ---------- 每日热度排名（最热的放最上面） ----------
+// 外部 RSS 多不暴露阅读量，这里用「时效 + 来源权重 + 当日确定性抖动」合成热度分：
+// 同一天内排序稳定，跨天随日期种子变化 → 每天自动重新按热度排名。
+function parseNewsDate(s) {
+  if (!s) return new Date();
+  s = String(s).trim();
+  let m = s.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  m = s.match(/(\d{1,2})[ -](\d{1,2})(?:[ -](\d{4}))?/);
+  if (m) { const y = m[3] ? +m[3] : new Date().getFullYear(); return new Date(y, +m[1] - 1, +m[2]); }
+  return new Date();
+}
+function dateAgeDays(s) { const d = parseNewsDate(s), now = new Date(); return Math.max(0, Math.round((now - d) / 86400000)); }
+function dailySeed() { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
+function hashStr(s) { let h = 0; for (let i = 0; i < (s || '').length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+function hotScore(it) {
+  const seed = dailySeed();
+  const w = { 'RadarAI':5, '机器之心':6, '新智元':5, '雪球网':6, '东方财富':6, '新浪财经':5, '华尔街见闻':6, '小黑盒':6, 'Steam':4 };
+  const base = (w[it.src] || 4) * 4;                          // 来源权重
+  const rec = Math.max(0, 30 - dateAgeDays(it.date)) * 1.6;   // 30 天内线性衰减
+  const jitter = (hashStr((it.title || '') + seed) % 100) / 100 * 28; // 当日确定性抖动
+  return Math.round(base + rec + jitter);
+}
+function rankByHot(items) {
+  return (items || []).map(it => Object.assign({}, it, { hot: hotScore(it) }))
+                       .sort((a, b) => b.hot - a.hot);
+}
+async function fetchWithTimeout(url, ms = 9000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try { return await fetch(url, { signal: ctrl.signal }); }
+  finally { clearTimeout(t); }
+}
+// 把相对路径补成绝对地址（RSS 正文里的图片常是相对路径）
+function absUrl(u, base) {
+  if (!u) return u;
+  try { return new URL(u, base).href; } catch (e) { return u; }
+}
+// 从 rss2json 的结构化 item 里挑一张图：thumbnail → enclosure → 正文首图
+function pickImg(it) {
+  if (it.thumbnail) return it.thumbnail;
+  if (it.enclosure && it.enclosure.link) return it.enclosure.link;
+  const html = it.content || it.description || '';
+  const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m ? m[1] : '';
+}
+// 可选自有 RSS 代理。当前原 Worker 已失效并会造成每个来源额外超时，因此保持为空，直接走 rss2json。
+const RSS_PROXY = '';
+// 把一份 RSS/Atom 的 XML 文本解析成统一结构（在浏览器端用 DOMParser 解析）
+function parseXmlItems(text, url) {
+  const doc = new DOMParser().parseFromString(text, 'text/xml');
+  const items = [...doc.querySelectorAll('item, entry')].slice(0, 12);
+  if (!items.length) return [];
+  return items.map(it => {
+    let img = '';
+    const enc = it.querySelector('enclosure');
+    if (enc && enc.getAttribute('url')) img = enc.getAttribute('url');
+    const media = it.getElementsByTagName('media:content')[0];
+    if (!img && media && media.getAttribute('url')) img = media.getAttribute('url');
+    // 从 content:encoded / description 的正文 HTML 里提取首图
+    const html = (it.querySelector('content\\:encoded, content, description') || {}).textContent || '';
+    const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (!img && m) img = m[1];
+    return {
+      title: (it.querySelector('title') || {}).textContent || '无标题',
+      link: (it.querySelector('link') || {}).textContent || '#',
+      date: ((it.querySelector('pubDate, published, updated') || {}).textContent || '').slice(5, 16),
+      img: absUrl(img, url)
+    };
+  });
+}
+// ---------- 中文翻译（英文标题 → 中文） ----------
+// 已是中文的内容直接跳过，避免浪费翻译额度；翻译失败则回退原文，绝不卡界面
+function hasCJK(s) { return /[一-鿿]/.test(s || ''); }
+async function translateText(text) {
+  if (!text || !text.trim()) return text;
+  if (hasCJK(text)) return text;                 // 已是中文 → 跳过
+  const q = text.length > 400 ? text.slice(0, 400) : text;
+  const enc = encodeURIComponent(q);
+  // 主通道：Google 非官方翻译接口（浏览器原生 CORS、无限额），en→zh-CN
+  try {
+    const r = await fetchWithTimeout('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q=' + enc, 6000);
+    const j = await r.json();
+    if (j && Array.isArray(j[0])) {
+      const zh = j[0].map(seg => seg[0]).join('');
+      if (zh) return zh;
+    }
+  } catch (e) { /* 主通道失败 → 兜底 */ }
+  // 兜底：MyMemory 免费翻译（CORS 友好，有每日额度）
+  try {
+    const r = await fetchWithTimeout('https://api.mymemory.translated.net/get?langpair=en-US|zh-CN&q=' + enc, 6000);
+    const j = await r.json();
+    if (j && j.responseData && j.responseData.translatedText) return j.responseData.translatedText;
+  } catch (e) { /* 兜底也失败 → 用原文 */ }
+  return text;
+}
+async function translateBatch(items) {
+  return Promise.all((items || []).map(async it => {
+    const t = await translateText(it.title);
+    return Object.assign({}, it, { title: t });
+  }));
+}
+
+// ★ 主通道：Dev.to 公开 API（浏览器原生 CORS，Access-Control-Allow-Origin:*，无需任何代理，秒级返回，自带封面图）
+async function fetchFeedPage(feed, page) {
+  // 多源聚合（如游戏板块：索尼/微软/任天堂/Steam 四大平台），分别抓取后合并、按日期排序、标注来源
+  if (feed.feeds && feed.feeds.length) {
+    const lists = await Promise.all(feed.feeds.map(async sf => {
+      try {
+        return (await fetchFeedPage(sf, page)).map(it => Object.assign({}, it, { src: sf.name || (it.src || '') }));
+      } catch (e) { return []; }
+    }));
+    const merged = [].concat(...lists);
+    // 多来源可能转载同一条内容，按规范化标题去重，保留先抓到的权威来源。
+    const seen = new Set();
+    const unique = merged.filter(it => {
+      const k = String(it.title || '').replace(/[\s｜|·:：,，。!！?？]/g, '').toLowerCase();
+      if (!k || seen.has(k)) return false;
+      seen.add(k); return true;
+    });
+    unique.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    return unique;
+  }
+  if (feed.api) {
+    try {
+      const sep = feed.api.indexOf('?') >= 0 ? '&' : '?';
+      const r = await fetchWithTimeout(feed.api + sep + 'page=' + page, 9000);
+      if (r.ok) {
+        const arr = await r.json();
+        if (Array.isArray(arr) && arr.length) {
+          return arr.map(a => ({
+            title: a.title || '无标题',
+            link: a.url || a.canonical_url || '#',
+            date: (a.published_at || a.published_timestamp || '').slice(0, 10),
+            img: a.cover_image || a.social_image || '',
+            desc: a.description || ''
+          }));
+        }
+      }
+    } catch (e) { /* Dev.to 偶发限流/网络抖动，降级到 RSS 代理链 */ }
+  }
+
+  // 降级通道：RSS + 多公共代理依次尝试（仅在 Dev.to 不可用时启用）
+  const url = feed.rss || feed.url;
+  // ① 自有 Worker 代理（填入 RSS_PROXY 后优先使用）
+  if (RSS_PROXY) {
+    try {
+      const r = await fetchWithTimeout(RSS_PROXY + encodeURIComponent(url));
+      if (r.ok) {
+        const items = parseXmlItems(await r.text(), url);
+        if (items.length) return items;
+      }
+    } catch (e) { /* Worker 失败则降级到公共代理 */ }
+  }
+
+  // ② rss2json（返回结构化 JSON，含 content 正文，便于取首图）
+  try {
+    // rss2json 的 count 参数现需 API key；不传该参数可继续使用免费接口。
+    const r = await fetchWithTimeout('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(url), 12000);
+    if (r.ok) {
+      const j = await r.json();
+      if (j.status === 'ok' && j.items && j.items.length) {
+        return j.items.slice(0, 12).map(it => ({
+          title: it.title, link: it.link,
+          date: (it.pubDate || '').slice(0, 16).replace('T', ' '),
+          img: pickImg(it),
+          desc: String(it.description || '').replace(/<[^>]+>/g, '').slice(0, 160)
+        }));
+      }
+    }
+  } catch (e) { /* 主通道失败，继续降级 */ }
+
+  // ③ 多公共代理依次尝试原生 XML，提高稳定性
+  const PROXIES = [
+    'https://api.allorigins.win/raw?url=',
+    'https://api.codetabs.com/v1/proxy/?quest=',
+    'https://corsproxy.io/?url=',
+    'https://thingproxy.freeboard.io/fetch/'
+  ];
+  for (const p of PROXIES) {
+    try {
+      const r = await fetchWithTimeout(p + encodeURIComponent(url));
+      if (!r.ok) continue;
+      const items = parseXmlItems(await r.text(), url);
+      if (items.length) return items;
+    } catch (e) { continue; }
+  }
+  throw new Error('all sources failed');
+}
+// 资讯无限滚动的会话状态（不限条数，浏览到底自动续抓）
+let newsPage = 1, newsLoading = false, newsHasMore = true, newsAccum = [], newsKey = 'tech';
+function setNewsState(t) { const el = $('newsState'); if (el) el.textContent = t; }
+// ---------- 聚合资讯加载（方案C） ----------
+// 静态 <script defer> 已尽量提前加载 news.js；此处为兜底（如脚本被拦），失败静默回退旧抓取链
+let _newsDataPromise = null;
+function ensureNewsData() {
+  if (window.NEWS_DATA) return Promise.resolve(true);
+  if (_newsDataPromise) return _newsDataPromise;
+  _newsDataPromise = new Promise(function (res) {
+    const sc = document.createElement('script');
+    const t = setTimeout(function () { res(false); }, 8000); // 8 秒兜底：既不出错也不加载时不再傻等
+    sc.src = NEWS_DATA_URL;
+    sc.onload = function () { clearTimeout(t); res(!!window.NEWS_DATA); };
+    sc.onerror = function () { clearTimeout(t); res(false); };
+    document.head.appendChild(sc);
+  });
+  return _newsDataPromise;
+}
+// 把聚合产物的 generatedAt 显示成本地时间（如「今天 13:21」/「8月6日 09:00」）
+function fmtGenTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const now = new Date();
+  const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const sameDay = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  return sameDay ? ('今天 ' + hm) : ((d.getMonth() + 1) + '月' + d.getDate() + '日 ' + hm);
+}
+
+// 拉取某一页并翻译后渲染；replace=true 时替换整列（首屏），否则追加（加载更多）
+async function fetchAndShow(key, replace) {
+  newsLoading = true;
+  setNewsState(replace ? '正在抓取资讯并翻译…' : '正在加载更多…');
+  try {
+    const raw = await fetchFeedPage(FEEDS[key], newsPage);
+    if (!raw.length) {
+      newsHasMore = false;
+      setNewsState('已经到底啦 ~ 共 ' + newsAccum.length + ' 条');
+      return;
+    }
+    const items = await translateBatch(raw);
+    newsAccum = rankByHot(replace ? items : newsAccum.concat(items));
+    renderNewsItems(newsAccum, key);
+    // 缓存翻译后的结果（限制存储上限，避免 localStorage 膨胀）
+    data.news[key] = { date: todayStr(), version: NEWS_SOURCE_VERSION, items: newsAccum.slice(0, 120) };
+    save();
+    newsHasMore = raw.length >= PER_PAGE && !FEEDS[key].feeds;
+    setNewsState(newsHasMore ? ('已加载 ' + newsAccum.length + ' 条 · 向下滚动加载更多') : '已经到底啦 ~ 共 ' + newsAccum.length + ' 条');
+    // 若内容未填满视口，自动继续续抓，实现“浏览完就持续抓取”
+    if (newsHasMore) {
+      const s = $('newsSentinel'), r = s && s.getBoundingClientRect();
+      if (r && r.top < window.innerHeight + 300) loadMore();
+    }
+  } catch (e) {
+    newsHasMore = false;
+    if (!replace && newsAccum.length) {
+      setNewsState('更多内容加载失败，已显示 ' + newsAccum.length + ' 条');
+    } else {
+      $('newsState').innerHTML = '资讯加载失败（接口暂时不可用，可稍后重试）<br><button id="newsRetry">点击重试</button>';
+      const rb = $('newsRetry'); if (rb) rb.onclick = () => loadNews(key, true);
+    }
+  } finally {
+    newsLoading = false;
+  }
+}
+async function loadMore() {
+  if (newsLoading || !newsHasMore) return;
+  if (!$('view-news').classList.contains('active')) return;
+  newsPage++;
+  await fetchAndShow(newsKey, false);
+}
+async function loadNews(key, force = false) {
+  const feed = FEEDS[key];
+  newsKey = key; newsPage = 1; newsHasMore = true; newsLoading = false; newsAccum = [];
+  $('newsTitle').textContent = feed.name;
+  document.querySelectorAll('#newsTabs .ntab').forEach(b => b.classList.toggle('active', b.dataset.feed === key));
+  const listEl = $('newsList'), stateEl = $('newsState');
+
+  // ① 聚合数据优先（方案C）：服务端每 2 小时更新，秒显无需等待；拿不到再回退旧抓取链
+  await ensureNewsData();
+  const nd = (window.NEWS_DATA || {})[key];
+  if (nd && nd.length) {
+    newsHasMore = false;
+    const translated = await translateBatch(nd);   // 英文源（IGN/Steam 等）在此译为中文
+    newsAccum = rankByHot(translated);
+    renderNewsItems(newsAccum, key);
+    const gt = (window.NEWS_DATA.meta && window.NEWS_DATA.meta.generatedAt) ? fmtGenTime(window.NEWS_DATA.meta.generatedAt) : '';
+    stateEl.textContent = (gt ? ('聚合更新于 ' + gt + ' · ') : '') + '共 ' + newsAccum.length + ' 条';
+    data.news[key] = { date: todayStr(), version: NEWS_SOURCE_VERSION, items: newsAccum.slice(0, 120) }; // 缓存供离线回退
+    save();
+    return;
+  }
+
+  const cached = data.news[key];
+  const cacheValid = cached && cached.version === NEWS_SOURCE_VERSION;
+
+  // ② 立刻渲染当前源版本的本地缓存，实现“一进去就能看到”，不等网络
+  if (cacheValid && cached.items && cached.items.length) {
+    stateEl.textContent = '（显示 ' + (cached.date === todayStr() ? '今日' : cached.date) + ' 缓存，刷新中…）';
+    const translated = await translateBatch(cached.items);   // 旧缓存若为英文则补翻译（中文会被 hasCJK 跳过）
+    newsAccum = rankByHot(translated);
+    renderNewsItems(newsAccum, key);
+  } else {
+    listEl.innerHTML = '';
+    stateEl.textContent = '首次加载，正在抓取资讯…';
+  }
+
+  // ③ 当天已抓过且非强制 → 不重复请求，但无限滚动依然可用（可继续往下看更多）
+  if (!force && cacheValid && cached.date === todayStr()) {
+    stateEl.textContent = '（' + cached.items.length + ' 条 · 今日已更新，向下滚动加载更多）';
+    const s = $('newsSentinel'), r = s && s.getBoundingClientRect();
+    if (r && r.top < window.innerHeight + 300) loadMore();
+    return;
+  }
+
+  // ④ 后台静默拉取最新一页（带中文翻译），拿到后覆盖显示；之后可无限滚动续抓
+  await fetchAndShow(key, true);
+}
+function renderNewsItems(items, key) {
+  $('newsState').innerHTML = '';
+  const listEl = $('newsList');
+  listEl.innerHTML = '';
+  const emoji = (FEEDS[key] && FEEDS[key].emoji) || '📰';
+  if (!items || !items.length) { listEl.innerHTML = '<li class="news-state">暂无资讯</li>'; return; }
+  items.forEach(it => {
+    const li = document.createElement('li');
+    li.className = 'news-item';
+    const a = document.createElement('a');
+    a.href = it.link || '#'; a.target = '_blank'; a.rel = 'noopener';
+
+    const text = document.createElement('div');
+    text.className = 'news-text';
+    const t = document.createElement('span'); t.className = 't'; t.textContent = it.title || '无标题';
+    const meta = document.createElement('div'); meta.className = 'news-meta';
+    if (it.src) { const src = document.createElement('span'); src.className = 'news-source'; src.textContent = it.src; meta.appendChild(src); }
+    if (it.date) { const date = document.createElement('span'); date.className = 'news-date'; date.textContent = String(it.date).slice(0, 10); meta.appendChild(date); }
+    if (it.hot != null) { const hot = document.createElement('span'); hot.className = 'news-hot'; hot.textContent = '热度 ' + it.hot; meta.appendChild(hot); }
+    text.appendChild(t); text.appendChild(meta);
+    a.appendChild(text);
+
+    const img = document.createElement('img');
+    img.className = 'news-thumb';
+    img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    if (it.img) {
+      img.src = it.img;
+      img.referrerPolicy = 'no-referrer';
+      img.onerror = function () {
+        if (this.dataset.fb) return;
+        this.dataset.fb = '1';
+        this.src = newsPlaceholder(emoji);
+      };
+    } else {
+      img.src = newsPlaceholder(emoji);
+    }
+    a.appendChild(img);
+    li.appendChild(a);
+    listEl.appendChild(li);
+  });
+}
+$('newsRefresh').onclick = () => loadNews(currentFeed, true);
+document.querySelectorAll('#newsTabs .ntab').forEach(b => {
+  b.onclick = () => { currentFeed = b.dataset.feed; loadNews(currentFeed, true); };
+});
+
+/* ============================================================
+   天气（Open-Meteo 免费接口，无需密钥；点击 chip 可切换城市）
+   ============================================================ */
+const WEATHER_CODES = {
+  0: ['☀️', '晴'], 1: ['🌤️', '少云'], 2: ['⛅', '多云'], 3: ['☁️', '阴'],
+  45: ['🌫️', '雾'], 48: ['🌫️', '冻雾'],
+  51: ['🌦️', '毛毛雨'], 53: ['🌦️', '毛毛雨'], 55: ['🌧️', '毛毛雨'],
+  56: ['🌧️', '冻雨'], 57: ['🌧️', '冻雨'],
+  61: ['🌧️', '小雨'], 63: ['🌧️', '中雨'], 65: ['🌧️', '大雨'],
+  66: ['🌧️', '冻雨'], 67: ['🌧️', '冻雨'],
+  71: ['🌨️', '小雪'], 73: ['🌨️', '中雪'], 75: ['❄️', '大雪'], 77: ['❄️', '雪粒'],
+  80: ['🌦️', '阵雨'], 81: ['🌧️', '强阵雨'], 82: ['⛈️', '暴雨'],
+  85: ['🌨️', '阵雪'], 86: ['🌨️', '强阵雪'],
+  95: ['⛈️', '雷暴'], 96: ['⛈️', '雷暴冰雹'], 99: ['⛈️', '强雷暴']
+};
+function renderWeather(w) {
+  const [emoji, text] = WEATHER_CODES[w.code] || ['⛅', '未知'];
+  $('wEmoji').textContent = emoji;
+  $('wTemp').textContent = Math.round(w.temp) + '°';
+  $('wCity').textContent = data.weather.city || '当前位置';
+  $('wSub').textContent = `${text} ${Math.round(w.low)}°~${Math.round(w.high)}°`;
+}
+async function fetchWeather() {
+  const wc = data.weather;
+  // 30 分钟缓存，避免频繁请求；但必须含 hourly（悬停弹层用），旧缓存无则重拉
+  if (wc.cache && wc.cache.data && wc.cache.data.hourly && Date.now() - wc.cache.time < 30 * 60 * 1000) {
+    renderWeather(wc.cache.data); return;
+  }
+  if (wc.lat == null) return locateCity();   // 还没有坐标，先定位
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${wc.lat}&longitude=${wc.lon}` +
+      `&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min` +
+      `&hourly=temperature_2m,weather_code&timezone=auto&forecast_days=2`;
+    const r = await fetchWithTimeout(url);
+    const j = await r.json();
+    const w = {
+      temp: j.current.temperature_2m,
+      code: j.current.weather_code,
+      high: j.daily.temperature_2m_max[0],
+      low: j.daily.temperature_2m_min[0],
+      hourly: { time: j.hourly.time, temp: j.hourly.temperature_2m, code: j.hourly.weather_code }
+    };
+    wc.cache = { time: Date.now(), data: w };
+    save();
+    renderWeather(w);
+  } catch (e) {
+    if (wc.cache) renderWeather(wc.cache.data);   // 失败用旧缓存
+    else $('wCity').textContent = '天气加载失败';
+  }
+}
+function locateCity() {
+  // 每次打开都重新请求定位；失败/拒绝则用上次坐标，没有再退到北京
+  const wc = data.weather;
+  const fallback = () => {
+    if (wc.lat == null) { wc.lat = 39.9042; wc.lon = 116.4074; }
+    if (!wc.city) wc.city = '北京';
+    save(); fetchWeather();
+  };
+  if (!navigator.geolocation) return fallback();
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = +pos.coords.latitude.toFixed(4);
+      const lon = +pos.coords.longitude.toFixed(4);
+      // 位置变了就清掉天气缓存重新拉
+      if (wc.lat !== lat || wc.lon !== lon) wc.cache = null;
+      wc.lat = lat; wc.lon = lon;
+      wc.city = wc.city || '当前位置';
+      save(); fetchWeather();
+    },
+    fallback,
+    { timeout: 5000 }
+  );
+}
+// 仅自动定位城市（按用户要求移除「手动输入城市名」功能）
+// 点击天气卡片 = 重新获取一次定位（不弹输入框）
+$('weatherChip').onclick = () => { locateCity(); };
+// 启动天气：手动选过城市按记忆城市；否则每次打开都重新自动定位
+if (data.weather.fixed) fetchWeather(); else locateCity();
+
+/* 鼠标悬停天气 → 显示未来 12 小时逐时预报 */
+async function renderHourly() {
+  const pop = $('weatherPop');
+  let w = (data.weather.cache && data.weather.cache.data) || null;
+  if (!w || !w.hourly) {
+    // 缓存缺失或旧版无 hourly → 先刷新天气（fetchWeather 现保证带 hourly），再渲染
+    try { await fetchWeather(); } catch (e) {}
+    w = (data.weather.cache && data.weather.cache.data) || null;
+  }
+  if (!w || !w.hourly) { pop.hidden = true; return; }
+  const { time, temp, code } = w.hourly;
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const curKey = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:00`;
+  let idx = time.indexOf(curKey);
+  if (idx < 0) idx = time.findIndex(t => new Date(t) >= now);   // 找不到整点就取首个≥现在的
+  if (idx < 0) idx = 0;
+  let rows = '';
+  for (let i = idx; i < Math.min(idx + 12, time.length); i++) {
+    const d = new Date(time[i]);
+    const label = i === idx ? '现在' : (d.getHours() + ':00');
+    const [emoji] = WEATHER_CODES[code[i]] || ['⛅'];
+    rows += `<div class="wh-row"><span class="wh-h">${label}</span><span class="wh-e">${emoji}</span><span class="wh-t">${Math.round(temp[i])}°</span></div>`;
+  }
+  pop.innerHTML = `<div class="wh-head">未来 12 小时 · ${data.weather.city || '当前位置'}</div>` +
+    `<div class="wh-grid">${rows}</div>` +
+    `<div class="wh-foot">数据来源 Open-Meteo</div>`;
+  pop.hidden = false;
+}
+$('weatherWrap').addEventListener('mouseenter', renderHourly);
+$('weatherWrap').addEventListener('mouseleave', () => { $('weatherPop').hidden = true; });
+
+/* ============================================================
+   多端同步（GitHub Gist，免后端）
+   - 配置后开机先从云端拉取覆盖本地（云端为准），操作后自动推送
+   - 无 GitHub 账号可用「导出/导入」手动传数据
+   ============================================================ */
+/* ============================================================
+   多端同步：你的 Cloudflare Worker（与 RSS 代理同一个地址），KV 持久化
+   配置内嵌在文件里、随版本携带 → 一次设置永久生效，不随部署地址变化丢失
+   ============================================================ */
+function setSyncText(s) {
+  const tip = $('syncTip'); if (tip) tip.textContent = s;
+}
+
+// 把当前各视图重新渲染一遍（导入/云端覆盖后用）
+function refreshAll() {
+  applyTheme();
+  goalInput.value = data.goal.date === todayStr() ? data.goal.text : '';
+  renderTodos();
+  noteArea.value = data.note;
+  renderLinks();
+  renderPomo();
+  renderProgress();
+  renderWordStats();
+  if ($('view-words').classList.contains('active')) startWordSession();
+  if ($('view-fitness').classList.contains('active')) renderFitness();
+  if ($('view-news').classList.contains('active') && data.news[currentFeed])
+    renderNewsItems(data.news[currentFeed].items, currentFeed);
+  if (data.weather.cache) renderWeather(data.weather.cache.data);
+}
+
+// 子集同步：只同步「手动录入的真实数据」，不同步 UI 偏好与易变缓存（theme/weather/news/links/sync/bills/words.target/name）
+function pickSync() {
+  return {
+    fitness: { checkins: data.fitness.checkins, measures: data.fitness.measures, plan: data.fitness.plan },
+    todos: data.todos,
+    note: data.note,
+    links: data.links,
+    words: { prog: data.words.prog, today: data.words.today },
+    goal: data.goal
+  };
+}
+// 从云端子集只覆盖白名单字段，保留本机 UI 偏好（theme/天气/资讯/同步时间戳等）不被覆盖
+function mergeSync(remote) {
+  if (!remote || typeof remote !== 'object') return;
+  if (remote.fitness) {
+    if (Array.isArray(remote.fitness.checkins)) data.fitness.checkins = remote.fitness.checkins;
+    if (Array.isArray(remote.fitness.measures)) data.fitness.measures = remote.fitness.measures;
+    if (typeof remote.fitness.plan === 'string') data.fitness.plan = remote.fitness.plan;
+  }
+  if (Array.isArray(remote.todos)) data.todos = remote.todos;
+  if (typeof remote.note === 'string') data.note = remote.note;
+  if (Array.isArray(remote.links)) data.links = remote.links;
+  if (remote.words) {
+    if (remote.words.prog) data.words.prog = remote.words.prog;
+    if (remote.words.today) data.words.today = remote.words.today;
+  }
+  if (remote.goal) data.goal = remote.goal;
+}
+async function syncPush() {
+  if (!GITHUB_TOKEN || !GIST_ID) return;
+  try {
+    setSyncText('☁️ 同步中…');
+    const res = await fetch('https://api.github.com/gists/' + GIST_ID, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + GITHUB_TOKEN, 'Content-Type': 'application/json', 'User-Agent': 'autoria-desk' },
+      body: JSON.stringify({ files: { [GIST_FILENAME]: { content: JSON.stringify(pickSync()) } } })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    data.sync.lastSync = Date.now();
+    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    setSyncText('☁️ 已同步 · ' + new Date().toLocaleTimeString('zh-CN'));
+  } catch (e) {
+    setSyncText('⚠️ 同步未成功（检查网络 / Token）');
+  }
+}
+async function syncPull() {
+  try {
+    const res = await fetch('https://api.github.com/gists/' + GIST_ID, {
+      headers: { 'Authorization': 'Bearer ' + GITHUB_TOKEN, 'User-Agent': 'autoria-desk' }
+    });
+    if (!res.ok) return null;
+    const j = await res.json();
+    const f = j.files && j.files[GIST_FILENAME];
+    const txt = f ? f.content : null;
+    return (txt && txt !== 'null') ? JSON.parse(txt) : null;
+  } catch (e) { return null; }
+}
+async function bootSync() {
+  if (!GITHUB_TOKEN || !GIST_ID) return;
+  try {
+    const remote = await syncPull();
+    if (remote && typeof remote === 'object') {
+      // 只合并白名单字段（手动数据），保留本机 UI 偏好不被云端覆盖
+      mergeSync(remote);
+      ensureSeedFitness(data);
+      localStorage.setItem(STORE_KEY, JSON.stringify(data));
+      refreshAll();
+      syncReady = true;
+      setSyncText('☁️ 已从云端加载 · ' + new Date().toLocaleTimeString('zh-CN'));
+      syncPush();
+    } else {
+      ensureSeedFitness(data);
+      await syncPush();
+      syncReady = true;
+    }
+  } catch (e) {
+    setSyncText('⚠️ 云端暂不可用');
+  }
+}
+
+// 同步图标：只显示按钮；桌面 hover 浮出上次同步时间；手机点击显示 2 秒后自动隐藏
+const syncIconBtn = $('syncIconBtn');
+const syncTipEl = $('syncTip');
+// 启动时填入上次同步时间（悬停/点击即可见）
+if (data.sync && data.sync.lastSync) setSyncText('☁️ 上次同步 · ' + new Date(data.sync.lastSync).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }));
+else setSyncText('☁️ 尚未同步');
+if (syncIconBtn && syncTipEl) {
+  syncIconBtn.addEventListener('click', () => {
+    if (!GITHUB_TOKEN) {
+      // 未配置令牌：引导用户一次性粘贴（存本机 localStorage，不上传）
+      const tk = window.prompt('输入 GitHub Token 以启用云端同步（仅保存在本机浏览器，不会上传）：');
+      if (tk && tk.trim()) {
+        try {
+          localStorage.setItem('ghToken', tk.trim());
+          GITHUB_TOKEN = tk.trim();
+          setSyncText('☁️ 已保存，正在同步…');
+          bootSync();
+        } catch (e) { setSyncText('⚠️ 保存失败'); }
+      }
+      return;
+    }
+    syncTipEl.classList.toggle('show');
+    setTimeout(() => syncTipEl.classList.remove('show'), 2000);
+  });
+}
+
+/* ============================================================
+/* ============================================================
+   启动：欢迎语 / 生日祝福
+   ============================================================ */
+if (isBirthday()) {
+  showToast(`🎂 ${USER_NAME()}，生日快乐！今天也要开心呀`, 4000);
+} else {
+  showToast(`👋 ${USER_NAME()}，欢迎你！`);
+}
+
+/* 启动云端同步（若已配置）：先拉取云端覆盖本地，保证多端一致 */
+bootSync();
+
+/* 启动后在后台预载聚合资讯（方案C）：服务端已聚合，这里只把各栏翻译并缓存到本地，
+   支持离线回退；不再逐 feed 抓 RSS。三栏并行、优先当前栏目；失败不影响主流程 */
+async function prefetchNews() {
+  await ensureNewsData();
+  const nd = window.NEWS_DATA;
+  if (!nd) return;
+  const keys = Object.keys(FEEDS);
+  const ordered = [currentFeed].concat(keys.filter(k => k !== currentFeed));
+  await Promise.allSettled(ordered.map(async key => {
+    const items = nd[key];
+    if (!items || !items.length) return;
+    const c = data.news[key];
+    if (c && c.version === NEWS_SOURCE_VERSION && c.date === todayStr()) return; // 当天已缓存则跳过
+    try {
+      const translated = await translateBatch(items);
+      data.news[key] = { date: todayStr(), version: NEWS_SOURCE_VERSION, items: rankByHot(translated).slice(0, 120) };
+      save();
+      // 若用户此刻正停在该栏目，直接刷新列表（进页面后也能静默更新）
+      if ($('view-news').classList.contains('active') && currentFeed === key)
+        renderNewsItems(data.news[key].items, key);
+    } catch (e) { /* 预载失败不影响主流程 */ }
+  }));
+}
+
+/* 空闲时再预抓取资讯 + 预载词库：避免与首屏渲染抢主线程/网络 */
+const _startPrefetch = () => prefetchNews();
+if ('requestIdleCallback' in window) requestIdleCallback(_startPrefetch, { timeout: 2500 });
+else setTimeout(_startPrefetch, 1200);
+/* 空闲预载 3.5MB 词库，进背单词/口语时几乎无感 */
+if ('requestIdleCallback' in window) requestIdleCallback(ensureVocabLib, { timeout: 4000 });
+else setTimeout(ensureVocabLib, 2500);
+
+/* 资讯无限滚动：哨兵进入视口附近即自动加载下一页（浏览完持续续抓） */
+const newsObserver = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting) loadMore();
+}, { rootMargin: '300px' });
+newsObserver.observe($('newsSentinel'));
+</script>
+</body>
+</html>
