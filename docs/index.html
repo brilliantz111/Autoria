@@ -863,7 +863,7 @@ noteArea.addEventListener('input', () => {
   $('noteStatus').textContent = '保存中…';
   clearTimeout(noteTimer);
   noteTimer = setTimeout(() => {
-    data.note = noteArea.value; save();
+    data.note = noteArea.value; data.noteTime = Date.now(); save();
     $('noteStatus').textContent = '已自动保存 ' + new Date().toLocaleTimeString('zh-CN');
     clearTimeout(noteSavedTimer);
     noteSavedTimer = setTimeout(() => { $('noteStatus').textContent = ''; }, 2000);
@@ -1567,11 +1567,12 @@ function bumpLevel(e, d) {
   const p = data.words.prog[k] || { level: 0, due: addDays(1) };
   p.level = Math.max(0, Math.min(INTERVALS.length - 1, p.level + d));
   p.due = addDays(INTERVALS[p.level]);
+  p.t = Date.now();
   data.words.prog[k] = p;
   save();
 }
 function failWord(e) {
-  data.words.prog[wKey(e)] = { level: 0, due: addDays(1) };
+  data.words.prog[wKey(e)] = { level: 0, due: addDays(1), t: Date.now() };
   save();
 }
 function finishDay() { wState(); save(); }
@@ -1637,7 +1638,7 @@ function renderLearn() {
   speakText(e.w);
   $('wNext').onclick = function () {
     if (!wProg(e)) {
-      data.words.prog[wKey(e)] = { level: 0, due: addDays(1) };
+      data.words.prog[wKey(e)] = { level: 0, due: addDays(1), t: Date.now() };
       data.words.today.new++;
       save();
     }
@@ -2167,6 +2168,7 @@ function pickSync() {
   return {
     todos: data.todos,
     note: data.note,
+    noteTime: data.noteTime || 0,
     links: data.links,
     words: { prog: data.words.prog, today: data.words.today },
     goal: data.goal
@@ -2185,7 +2187,9 @@ function mergeSync(remote) {
     }
     data.todos = [...byId.values()];
   }
-  if (typeof remote.note === 'string' && remote.note.length >= (data.note || '').length) data.note = remote.note;
+  if (typeof remote.note === 'string') {
+    if ((remote.noteTime || 0) >= (data.noteTime || 0)) { data.note = remote.note; data.noteTime = remote.noteTime || 0; }
+  }
   if (Array.isArray(remote.links)) {
     const byId = new Map();
     for (const l of data.links) byId.set(l.id, l);
@@ -2198,7 +2202,7 @@ function mergeSync(remote) {
     for (const k in w.prog) {
       const lv = data.words.prog[k], rv = w.prog[k];
       if (!lv) { data.words.prog[k] = rv; continue; }
-      data.words.prog[k] = ((rv.due || '') >= (lv.due || '')) ? rv : lv;
+      data.words.prog[k] = ((rv.t || 0) > (lv.t || 0)) ? rv : lv;
     }
   }
   if (w.today) {
