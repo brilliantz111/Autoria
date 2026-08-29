@@ -547,6 +547,7 @@ input,textarea,select{font-family:inherit;color:var(--ink)}
             <button class="ntab active" data-feed="tech">🔬 科技资讯</button>
             <button class="ntab" data-feed="finance">💰 金融资讯</button>
             <button class="ntab" data-feed="game">🎮 游戏资讯</button>
+            <button class="ntab" data-feed="product">💡 产品资讯</button>
           </div>
           <ul class="news-list" id="newsList"></ul>
           <div class="news-state" id="newsState"></div>
@@ -1878,7 +1879,8 @@ const NEWS_REPO = 'brilliantz111/mydesk-news';
 const FEEDS = {
   tech: { name: '🔬 科技资讯', emoji: '🔬' },
   finance: { name: '💰 金融资讯', emoji: '💰' },
-  game: { name: '🎮 游戏资讯', emoji: '🎮' }
+  game: { name: '🎮 游戏资讯', emoji: '🎮' },
+  product: { name: '💡 产品资讯', emoji: '💡' }
 };
 // 源站防盗链导致真图加载失败时，用这张占位图兜底，保证每条右侧都有视觉块
 function newsPlaceholder(emoji) {
@@ -1907,7 +1909,7 @@ function dailySeed() { const d = new Date(); return d.getFullYear() * 10000 + (d
 function hashStr(s) { let h = 0; for (let i = 0; i < (s || '').length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
 function hotScore(it) {
   const seed = dailySeed();
-  const w = { 'IT之家':6, '36氪':5, 'Solidot':5, '少数派':5, '机器之心':6, '开源中国':5, '华尔街见闻':6, '雪球':6, '东方财富':6, '新浪财经':5, 'Steam':4, '游民星空':6, '小黑盒':6, '3DM':5 };
+  const w = { 'IT之家':6, '36氪':5, 'Solidot':5, '少数派':5, '机器之心':6, '开源中国':5, '华尔街见闻':6, '新浪7x24':5, '雪球':6, '东方财富':6, '新浪财经':5, '游民星空':6, '小黑盒热榜':6, '小黑盒':6, '3DM':5, '机核':5, 'indienova':5, 'A9VG 社区':5, 'GameLook':5, '人人都是产品经理':6 };
   const base = (w[it.src] || 4) * 4;                          // 来源权重
   const rec = Math.max(0, 30 - dateAgeDays(it.date)) * 1.6;   // 30 天内线性衰减
   const jitter = (hashStr((it.title || '') + seed) % 100) / 100 * 28; // 当日确定性抖动
