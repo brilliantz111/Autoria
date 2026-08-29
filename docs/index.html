@@ -824,7 +824,7 @@ function renderTodos() {
       <button class="todo-del" title="删除">✕</button>`;
     li.querySelector('.todo-text').textContent = t.text;
     li.querySelector('.todo-check').onclick = () => {
-      t.done = !t.done; t.doneDate = t.done ? todayStr() : '';
+      t.done = !t.done; t.doneDate = todayStr();
       save(); renderTodos(); renderProgress();
     };
     li.querySelector('.todo-del').onclick = () => {
@@ -2172,16 +2172,45 @@ function pickSync() {
     goal: data.goal
   };
 }
-// 从云端子集只覆盖白名单字段，保留本机 UI 偏好（theme/天气/资讯/同步时间戳等）不被覆盖
+// 从云端子集合并白名单字段：待办/进度/打卡按条目双向并集（多设备互不覆盖），本机 UI 偏好不被触碰
 function mergeSync(remote) {
   if (!remote || typeof remote !== 'object') return;
-  if (Array.isArray(remote.todos)) data.todos = remote.todos;
-  if (typeof remote.note === 'string') data.note = remote.note;
-  if (Array.isArray(remote.links)) data.links = remote.links;
-  if (remote.words) {
-    if (remote.words.prog) data.words.prog = remote.words.prog;
-    if (remote.words.today) data.words.today = remote.words.today;
+  if (Array.isArray(remote.todos)) {
+    const byId = new Map();
+    for (const t of data.todos) byId.set(t.id, t);
+    for (const t of remote.todos) {
+      const local = byId.get(t.id);
+      if (!local) { byId.set(t.id, t); continue; }
+      if ((t.doneDate || '') >= (local.doneDate || '')) byId.set(t.id, t);
+    }
+    data.todos = [...byId.values()];
   }
+  if (typeof remote.note === 'string' && remote.note.length >= (data.note || '').length) data.note = remote.note;
+  if (Array.isArray(remote.links)) {
+    const byId = new Map();
+    for (const l of data.links) byId.set(l.id, l);
+    for (const l of remote.links) if (!byId.has(l.id)) byId.set(l.id, l);
+    data.links = [...byId.values()];
+  }
+  const w = remote.words || {};
+  data.words.prog = data.words.prog || {};
+  if (w.prog) {
+    for (const k in w.prog) {
+      const lv = data.words.prog[k], rv = w.prog[k];
+      if (!lv) { data.words.prog[k] = rv; continue; }
+      data.words.prog[k] = ((rv.due || '') >= (lv.due || '')) ? rv : lv;
+    }
+  }
+  if (w.today) {
+    const lt = data.words.today || {};
+    if ((w.today.date || '') > (lt.date || '')) data.words.today = w.today;
+    else if ((w.today.date || '') === (lt.date || '')) {
+      data.words.today = { date: w.today.date, new: Math.max(lt.new || 0, w.today.new || 0), rev: Math.max(lt.rev || 0, w.today.rev || 0) };
+    }
+  }
+  if (Array.isArray(w.favs)) data.words.favs = [...new Set([...(data.words.favs || []), ...w.favs])];
+  if (Array.isArray(w.checkins)) data.words.checkins = [...new Set([...(data.words.checkins || []), ...w.checkins])].sort();
+  if (w.target) data.words.target = Math.max(data.words.target || 15, w.target);
   if (remote.goal) data.goal = remote.goal;
 }
 async function syncPush() {
